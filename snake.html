@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇 - 请假专用</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .container {
+            background: #16213e;
+            padding: 30px 40px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #0f0f23;
+            border-radius: 16px;
+            box-shadow: inset 0 0 30px rgba(0,255,200,0.08);
+            width: 400px;
+            height: 400px;
+        }
+        .info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 16px 6px 0;
+            color: #a0e8d8;
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        .score span {
+            color: #f5c842;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        button {
+            background: #f5c842;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 0 #b38f2e;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #b38f2e;
+        }
+        button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b38f2e;
+        }
+        .hint {
+            margin-top: 12px;
+            color: #5f7a8a;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 480px) {
+            .container { padding: 16px; }
+            canvas { width: 300px; height: 300px; }
+            .info { font-size: 15px; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="info">
+        <div class="score">🍎 <span id="scoreDisplay">0</span></div>
+        <button id="restartBtn">🔄 重来</button>
+    </div>
+    <div class="hint">⬆⬇⬅➡ 方向键控制 · 按空格暂停</div>
+</div>
+
+<script>
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('scoreDisplay');
+
+        const GRID_SIZE = 20;
+        const CELL_SIZE = 400 / GRID_SIZE;
+
+        let snake = [];
+        let food = {};
+        let direction = 'right';
+        let nextDirection = 'right';
+        let score = 0;
+        let gameOver = false;
+        let winFlag = false;
+        let paused = false;
+        let gameLoopInterval = null;
+        let animationFrame = null;
+
+        function initGame() {
+            snake = [
+                {x: 10, y: 10},
+                {x: 9, y: 10},
+                {x: 8, y: 10}
+            ];
+            direction = 'right';
+            nextDirection = 'right';
+            score = 0;
+            gameOver = false;
+            winFlag = false;
+            paused = false;
+            updateScore();
+            spawnFood();
+            clearGameLoop();
+            startGameLoop();
+        }
+
+        function spawnFood() {
+            const totalCells = GRID_SIZE * GRID_SIZE;
+            if (snake.length >= totalCells) {
+                winFlag = true;
+                gameOver = true;
+                clearGameLoop();
+                return;
+            }
+            const snakeSet = new Set(snake.map(cell => `${cell.x},${cell.y}`));
+            const freeCells = [];
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (!snakeSet.has(`${i},${j}`)) freeCells.push({x: i, y: j});
+                }
+            }
+            if (freeCells.length === 0) {
+                winFlag = true;
+                gameOver = true;
+                clearGameLoop();
+                return;
+            }
+            const rand = Math.floor(Math.random() * freeCells.length);
+            food = freeCells[rand];
+        }
+
+        function updateScore() {
+            scoreSpan.textContent = score;
+        }
+
+        function changeDirection(newDir) {
+            const opposites = { 'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left' };
+            if (newDir !== opposites[direction]) {
+                nextDirection = newDir;
+            }
+        }
+
+        function moveSnake() {
+            if (gameOver || paused) return;
+
+            direction = nextDirection;
+            const head = snake[0];
+            let newHead = { ...head };
+            switch (direction) {
+                case 'right': newHead.x += 1; break;
+                case 'left':  newHead.x -= 1; break;
+                case 'down':  newHead.y += 1; break;
+                case 'up':    newHead.y -= 1; break;
+                default: return;
+            }
+
+            if (newHead.x < 0 || newHead.x >= GRID_SIZE || newHead.y < 0 || newHead.y >= GRID_SIZE) {
+                gameOver = true;
+                clearGameLoop();
+                return;
+            }
+
+            const isEating = (newHead.x === food.x && newHead.y === food.y);
+
+            let newSnake = [newHead, ...snake];
+            if (!isEating) {
+                newSnake.pop();
+            }
+
+            const headStr = `${newHead.x},${newHead.y}`;
+            const bodyWithoutHead = newSnake.slice(1).map(cell => `${cell.x},${cell.y}`);
+            if (bodyWithoutHead.includes(headStr)) {
+                gameOver = true;
+                clearGameLoop();
+                return;
+            }
+
+            snake = newSnake;
+
+            if (isEating) {
+                score++;
+                updateScore();
+                spawnFood();
+                if (winFlag) {
+                    gameOver = true;
+                    clearGameLoop();
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, 400, 400);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, 400);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(400, i * CELL_SIZE);
+                ctx.stroke();
+            }
+
+            ctx.shadowColor = '#ff6b6b';
+            ctx.shadowBlur = 18;
+            ctx.fillStyle = '#ff4757';
+            ctx.beginPath();
+            ctx.arc(food.x * CELL_SIZE + CELL_SIZE/2, food.y * CELL_SIZE + CELL_SIZE/2, CELL_SIZE/2 - 2, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255,255,255,0.30)';
+            ctx.beginPath();
+            ctx.arc(food.x * CELL_SIZE + CELL_SIZE/2 - 4, food.y * CELL_SIZE + CELL_SIZE/2 - 5, 4, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+            snake.forEach((cell, index) => {
+                const x = cell.x * CELL_SIZE;
+                const y = cell.y * CELL_SIZE;
+                const padding = index === 0 ? 1 : 2;
+                const radius = 6;
+
+                const ratio = index / snake.length;
+                const r = Math.round(20 + 60 * (1 - ratio));
+                const g = Math.round(200 + 40 * (1 - ratio));
+                const b = Math.round(180 + 20 * (1 - ratio));
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.shadowColor = 'rgba(0,255,200,0.25)';
+                ctx.shadowBlur = index === 0 ? 20 : 8;
+
+                ctx.beginPath();
+                ctx.roundRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, radius);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+
+            const head = snake[0];
+            if (head) {
+                const hx = head.x * CELL_SIZE + CELL_SIZE/2;
+                const hy = head.y * CELL_SIZE + CELL_SIZE/2;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(hx - 6, hy - 6, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(hx + 6, hy - 6, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#1a1a2e';
+                ctx.beginPath();
+                ctx.arc(hx - 7, hy - 8, 2, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(hx + 5, hy - 8, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.60)';
+                ctx.fillRect(0, 0, 400, 400);
+                ctx.fillStyle = winFlag ? '#f5c842' : '#ff6b6b';
+                ctx.font = 'bold 36px "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(winFlag ? '🎉 通关！' : '💀 游戏结束', 200, 180);
+                ctx.fillStyle = '#c0d0d0';
+                ctx.font = '18px "Segoe UI", sans-serif';
+                ctx.fillText('点击「重来」继续', 200, 250);
+            } else if (paused) {
+                ctx.fillStyle = 'rgba(0,0,0,0.40)';
+                ctx.fillRect(0, 0, 400, 400);
+                ctx.fillStyle = '#a0e8d8';
+                ctx.font = 'bold 32px "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('⏸ 暂停中', 200, 200);
+            }
+        }
+
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
+                const r = typeof radii === 'number' ? radii : (radii || 0);
+                this.moveTo(x + r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                this.closePath();
+                return this;
+            };
+        }
+
+        function gameTick() {
+            if (!gameOver && !paused) {
+                moveSnake();
+            }
+            draw();
+        }
+
+        function startGameLoop() {
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameTick, 120);
+        }
+
+        function clearGameLoop() {
+            if (gameLoopInterval) {
+                clearInterval(gameLoopInterval);
+                gameLoopInterval = null;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                e.preventDefault();
+                if (gameOver) return;
+                const map = {
+                    'ArrowUp': 'up',
+                    'ArrowDown': 'down',
+                    'ArrowLeft': 'left',
+                    'ArrowRight': 'right'
+                };
+                changeDirection(map[key]);
+            }
+            if (key === ' ' || key === 'Space') {
+                e.preventDefault();
+                if (gameOver) return;
+                paused = !paused;
+                draw();
+            }
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            initGame();
+            draw();
+        });        initGame();
+        draw();
+        startGameLoop();
+    })();
+</script>
+</body>
+</html>
