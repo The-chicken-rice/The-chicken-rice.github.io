@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文明 · 战争与领土</title>
+    <title>文明 · 战争与山脉</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -25,6 +25,7 @@
             max-width:960px;
             width:100%;
             margin:10px;
+            position:relative;
         }
         .game-wrapper {
             position:relative;
@@ -36,6 +37,32 @@
             box-shadow:inset 0 0 60px rgba(0,0,0,0.4);
         }
         canvas { display:block; width:100% !important; height:100% !important; touch-action:none; cursor:crosshair; }
+
+        /* 战争横幅 */
+        #warBanner {
+            position:absolute;
+            top:12px;
+            left:50%;
+            transform:translateX(-50%);
+            background:rgba(255,0,0,0.85);
+            color:#fff;
+            padding:6px 24px;
+            border-radius:40px;
+            font-weight:700;
+            font-size:22px;
+            letter-spacing:2px;
+            z-index:20;
+            display:none;
+            animation:warFlash .5s infinite alternate;
+            pointer-events:none;
+            text-shadow:0 0 20px rgba(255,0,0,0.5);
+            border:2px solid #ff6b6b;
+        }
+        @keyframes warFlash {
+            0% { opacity:0.6; transform:translateX(-50%) scale(0.96); }
+            100% { opacity:1; transform:translateX(-50%) scale(1.04); }
+        }
+
         .info-panel {
             display:flex;
             flex-wrap:wrap;
@@ -54,8 +81,6 @@
             border:1px solid #3a3220;
         }
         .info-panel .highlight { color:#f5c842; }
-        .info-panel .war-alert { color:#ff4757; border-color:#ff4757; animation:blink .8s infinite; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
         .toolbar {
             display:flex;
             flex-wrap:wrap;
@@ -116,6 +141,7 @@
             .toolbar button { font-size:11px; padding:5px 10px; }
             .info-panel span { font-size:12px; padding:3px 10px; }
             .rank-item { font-size:12px; padding:2px 10px; }
+            #warBanner { font-size:16px; padding:4px 14px; top:8px; }
         }
     </style>
 </head>
@@ -123,6 +149,7 @@
 <div class="container">
     <div class="game-wrapper">
         <canvas id="worldCanvas" width="1200" height="1200"></canvas>
+        <div id="warBanner">⚔️ 战争爆发！</div>
     </div>
     <div class="info-panel">
         <span>📆 天数 <span id="dayDisplay" class="highlight">0</span></span>
@@ -132,7 +159,6 @@
         <span>🐾 <span id="animalCount">0</span></span>
         <span>⚔️ <span id="factionCount">0</span></span>
         <span>⛲ <span id="springCount">0/12</span></span>
-        <span id="warStatus" class="war-alert" style="display:none;">⚔️ 战争！</span>
     </div>
     <div class="toolbar">
         <button class="create" data-tool="human">👤 人</button>
@@ -144,7 +170,7 @@
         <button class="special" data-tool="asteroid">🌠 流星雨</button>
         <button class="special" data-tool="reset">🔄 重置</button>
     </div>
-    <div class="status-line" id="statusMessage">⛲ 1200x1200 · 头领 · 升级 · 战争</div>
+    <div class="status-line" id="statusMessage">⛲ 山脉 · 路径领土 · 战争 · 首领</div>
     <div class="rank-panel">
         <div class="title">🏆 存活时长榜</div>
         <div class="rank-list" id="rankList"><span class="empty-rank">暂无记录</span></div>
@@ -161,7 +187,7 @@
     const SPRING_COUNT = 12;
     const WAR_THRESHOLD = 3;
     const UPGRADE_THRESHOLD = 10;
-    const GRID_COLOR = 'rgba(60,50,30,0.10)';
+    const GRID_COLOR = 'rgba(60,50,30,0.08)';
 
     // ---- 工具 ----
     function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
@@ -184,6 +210,48 @@
         return inside;
     }
 
+    // ---- 地形：山脉 ----
+    let mountains = [];
+    function generateMountains(){
+        mountains = [];
+        const numRanges = 18 + Math.floor(Math.random() * 12);
+        for(let i=0;i<numRanges;i++){
+            let x = 50 + Math.random() * (W - 100);
+            let y = 50 + Math.random() * (H - 100);
+            const dir = Math.random() * Math.PI * 2;
+            const length = 120 + Math.random() * 300;
+            const width = 18 + Math.random() * 28;
+            const pts = [];
+            for(let step=0; step<length; step+=12){
+                const nx = x + Math.cos(dir + (Math.random()-0.5)*0.7) * step;
+                const ny = y + Math.sin(dir + (Math.random()-0.5)*0.7) * step;
+                if(nx>10 && nx<W-10 && ny>10 && ny<H-10) pts.push({x:nx, y:ny});
+            }
+            if(pts.length > 3) mountains.push({ points: pts, width });
+        }
+    }
+
+    function isOnMountain(x, y){
+        for(let range of mountains){
+            for(let p of range.points){
+                if(Math.hypot(x - p.x, y - p.y) < range.width) return true;
+            }
+        }
+        return false;
+    }
+
+    function avoidMountains(from, to){
+        const mid = { x: (from.x + to.x)/2, y: (from.y + to.y)/2 };
+        if(isOnMountain(mid.x, mid.y)){
+            const angle = Math.atan2(to.y - from.y, to.x - from.x) + (Math.random()-0.5) * Math.PI * 0.8;
+            const d = Math.hypot(to.x - from.x, to.y - from.y);
+            const nx = from.x + Math.cos(angle) * d * 0.5;
+            const ny = from.y + Math.sin(angle) * d * 0.5;
+            return { x: Math.max(10, Math.min(W-10, nx)), y: Math.max(10, Math.min(H-10, ny)) };
+        }
+        return to;
+    }
+
     // ---- 泉水 ----
     let springs=[];
     function generateSprings(){
@@ -193,25 +261,18 @@
             do{
                 x=50+Math.random()*(W-100);
                 y=50+Math.random()*(H-100);
-                valid=true;
+                valid = !isOnMountain(x,y);
                 for(let s of springs) if(dist(s,{x,y})<120){ valid=false; break; }
                 attempts++;
-            }while(!valid && attempts<200);
+            }while(!valid && attempts<300);
             springs.push({x,y,radius:14,ownerId:null});
         }
     }
+
     function isNearSpring(x,y){ for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS) return true; return false; }
     function canClaimSpring(x,y,fid){ for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS && s.ownerId!==null && s.ownerId!==fid) return false; return true; }
     function claimSpring(x,y,fid){ for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS && s.ownerId===null) s.ownerId=fid; }
     function getNearestSpring(x,y){ let n=null,md=Infinity; for(let s of springs){ const d=dist(s,{x,y}); if(d<md){md=d;n=s;} } return n; }
-    function autoClaimSpringsByTerritory(f){
-        const pts=f.polygonPoints||[];
-        if(pts.length<3) return;
-        for(let s of springs){
-            if(s.ownerId!==null) continue;
-            if(pointInPolygon(s.x,s.y,pts)){ s.ownerId=f.id; setStatus('⛲ 领土扩张，占据中立泉水！'); }
-        }
-    }
 
     const FACTION_COLORS = ['#c0392b','#2980b9','#27ae60','#f39c12','#8e44ad','#16a085','#d35400','#e74c8b','#2c3e50','#7f8c8d'];
     let factionIdCounter=0;
@@ -251,8 +312,9 @@
         document.getElementById('factionCount').textContent=factions.length;
         const claimed=springs.filter(s=>s.ownerId!==null).length;
         document.getElementById('springCount').textContent=`${claimed}/${SPRING_COUNT}`;
-        const atWar=factions.some(f=>f.atWar);
-        document.getElementById('warStatus').style.display=atWar?'inline-block':'none';
+        // 战争横幅
+        const atWar = factions.some(f=>f.atWar);
+        document.getElementById('warBanner').style.display = atWar ? 'block' : 'none';
     }
     function setStatus(msg){ document.getElementById('statusMessage').textContent=msg; }
 
@@ -260,18 +322,47 @@
     function createFaction(x,y){
         const color=FACTION_COLORS[factionIdCounter%FACTION_COLORS.length];
         factionIdCounter++;
-        const f={id:factionIdCounter,color,cx:x,cy:y,humans:[],polygonPoints:[],atWar:false,warTargets:[],trespassCount:{},leader:null,level:1,hpBonus:0,atkBonus:0,remoteChance:0,population:0};
+        const f={
+            id:factionIdCounter, color,
+            cx:x, cy:y,
+            humans:[],
+            polygonPoints:[],
+            footprints:[],
+            atWar:false,
+            warTargets:[],
+            trespassCount:{},
+            leader:null,
+            level:1,
+            hpBonus:0,
+            atkBonus:0,
+            remoteChance:0,
+            population:0
+        };
         factions.push(f);
         return f;
     }
     function getFactionById(id){ return factions.find(f=>f.id===id); }
 
-    function updateFactionPolygon(f){
-        const members=entities.filter(e=>e.alive&&e.factionId===f.id);
-        if(members.length<3){ f.polygonPoints=[]; return; }
-        f.polygonPoints=convexHull(members.map(e=>({x:e.x,y:e.y})));
+    // ---- 基于路径的领土 ----
+    function updateFootprint(entity){
+        if(!entity.factionId) return;
+        const f=getFactionById(entity.factionId);
+        if(!f) return;
+        if(!entity.lastFP) entity.lastFP={x:entity.x, y:entity.y};
+        if(Math.hypot(entity.x-entity.lastFP.x, entity.y-entity.lastFP.y) > 18){
+            f.footprints.push({x:entity.x, y:entity.y});
+            entity.lastFP={x:entity.x, y:entity.y};
+            if(f.footprints.length > 1200) f.footprints.splice(0, 50);
+        }
     }
 
+    function rebuildTerritory(faction){
+        if(faction.footprints.length < 5){ faction.polygonPoints=[]; return; }
+        const pts = faction.footprints.slice(-800);
+        faction.polygonPoints = convexHull(pts);
+    }
+
+    // ---- 升级 ----
     function checkFactionUpgrade(f){
         const pop=entities.filter(e=>e.alive&&e.factionId===f.id&&(e.type==='human'||e.type==='village')).length;
         f.population=pop;
@@ -284,6 +375,7 @@
         }
     }
 
+    // ---- 战争 ----
     function checkAndDeclareWar(fid, oid){
         const f=getFactionById(fid), other=getFactionById(oid);
         if(!f||!other||(f.atWar&&other.atWar)) return;
@@ -299,13 +391,38 @@
             if(!other.warTargets) other.warTargets=[];
             if(!f.warTargets.includes(oid)) f.warTargets.push(oid);
             if(!other.warTargets.includes(fid)) other.warTargets.push(fid);
+            // 切换攻击模式
+            entities.forEach(e=>{
+                if(e.type==='human' && (e.factionId===f.id || e.factionId===other.id)){
+                    e.moveState='fighting';
+                    e.targetX=null;
+                }
+            });
             setStatus(`⚔️ 阵营${fid}与${oid}开战！`);
             updateUI();
         }
     }
 
+    function endWar(winner, loser){
+        winner.atWar=false;
+        loser.atWar=false;
+        // 占据泉水
+        springs.forEach(s=>{
+            if(s.ownerId===loser.id) s.ownerId=winner.id;
+        });
+        // 恢复游荡
+        entities.forEach(e=>{
+            if(e.type==='human' && (e.factionId===winner.id || e.factionId===loser.id)){
+                e.moveState='moving';
+                e.targetX=null;
+            }
+        });
+        setStatus(`🏆 阵营${winner.id}获胜，占据所有泉水！`);
+        updateUI();
+    }
+
     function spawnLeader(f,x,y){
-        const leader={x,y,type:'leader',factionId:f.id,alive:true,hp:150,maxHp:150,age:0,attackCooldown:0,radius:14,isLeader:true};
+        const leader={x,y,type:'leader',factionId:f.id,alive:true,hp:150,maxHp:150,age:0,attackCooldown:0,radius:14,isLeader:true,lastHitTime:0};
         entities.push(leader);
         f.leader=leader;
         f.humans.push(leader);
@@ -317,6 +434,7 @@
         if(type==='human'||type==='village') civilizationStarted=true;
 
         if(type==='village'){
+            if(isOnMountain(x,y)){ setStatus('❌ 山脉上不能建村庄！'); return; }
             if(!isNearSpring(x,y)){ setStatus('❌ 村庄必须靠近泉水！'); return; }
             let targetFid=factionId;
             if(targetFid===null){
@@ -335,12 +453,12 @@
                 spawnLeader(f,x+15,y-15);
                 for(let i=0;i<4;i++){
                     const hx=x+(Math.random()-0.5)*50, hy=y+(Math.random()-0.5)*50;
-                    entities.push({x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0});
-                    f.humans.push(entities[entities.length-1]);
+                    const h={x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0,lastFP:null};
+                    entities.push(h); f.humans.push(h);
                 }
                 const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
                 if(cv>villagePeak) villagePeak=cv;
-                updateFactionPolygon(f);
+                rebuildTerritory(f);
                 checkFactionUpgrade(f);
                 setStatus('🏡 新阵营！头领+4人');
                 updateUI();
@@ -356,12 +474,12 @@
             for(let i=0;i<4;i++){
                 const hx=x+(Math.random()-0.5)*50, hy=y+(Math.random()-0.5)*50;
                 const isRemoteNew=Math.random()<f.remoteChance;
-                entities.push({x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0});
-                f.humans.push(entities[entities.length-1]);
+                const h={x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0,lastFP:null};
+                entities.push(h); f.humans.push(h);
             }
             const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
             if(cv>villagePeak) villagePeak=cv;
-            updateFactionPolygon(f);
+            rebuildTerritory(f);
             checkFactionUpgrade(f);
             setStatus('🏡 村庄建立！+4人');
             updateUI();
@@ -378,12 +496,13 @@
             }
             if(target){
                 const isRemoteNew=Math.random()<target.remoteChance;
-                entities.push({x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:target.id,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0});
-                target.humans.push(entities[entities.length-1]);
-                updateFactionPolygon(target);
+                const h={x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:target.id,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0,lastFP:null};
+                entities.push(h); target.humans.push(h);
+                rebuildTerritory(target);
                 checkFactionUpgrade(target);
             } else {
-                entities.push({x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:null,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0});
+                const h={x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:null,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0,lastFP:null};
+                entities.push(h);
             }
             updateUI();
             return;
@@ -410,6 +529,7 @@
             const list=grid[key];
             if(list.length>=3){
                 const cx=gx*80+40, cy=gy*80+40;
+                if(isOnMountain(cx,cy)) continue;
                 if(!isNearSpring(cx,cy)) continue;
                 let hasNeutral=false;
                 for(let s of springs) if(dist(s,{x:cx,y:cy})<SPRING_RADIUS && s.ownerId===null){ hasNeutral=true; break; }
@@ -425,13 +545,13 @@
                         spawnLeader(f,cx+15,cy-15);
                         for(let i=0;i<4;i++){
                             const hx=cx+(Math.random()-0.5)*50, hy=cy+(Math.random()-0.5)*50;
-                            entities.push({x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:f.id,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0});
-                            f.humans.push(entities[entities.length-1]);
+                            const h={x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:f.id,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0,lastFP:null};
+                            entities.push(h); f.humans.push(h);
                         }
                         list.forEach(h=>{ h.factionId=f.id; f.humans.push(h); });
                         const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
                         if(cv>villagePeak) villagePeak=cv;
-                        updateFactionPolygon(f);
+                        rebuildTerritory(f);
                         checkFactionUpgrade(f);
                         setStatus('🏡 人群聚集，形成新阵营！');
                     }
@@ -440,27 +560,28 @@
         }
     }
 
-    // ---- 灾难 ----
+    // ---- 灾难（伤害提升） ----
     function spawnDisaster(type,cx,cy){
         const rad=type==='nuke'?90:(type==='asteroid'?50:40);
-        const base=type==='nuke'?180:(type==='asteroid'?70:50);
+        const base=type==='nuke'?220:(type==='asteroid'?90:65); // 提升
         const damage=base*1.5;
-        const effectRad=type==='nuke'?160:(type==='asteroid'?130:110);
-        const count=type==='nuke'?120:60;
+        const effectRad=type==='nuke'?170:(type==='asteroid'?140:120);
+        const count=type==='nuke'?140:70;
         for(let i=0;i<count;i++){
-            const a=Math.random()*2*Math.PI, sp=1+Math.random()*(type==='nuke'?8:5);
+            const a=Math.random()*2*Math.PI, sp=1+Math.random()*(type==='nuke'?9:5);
             particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:30+Math.random()*30,maxLife:60,color:type==='nuke'?'#e86a5f':'#f5c842'});
         }
         entities.forEach(e=>{
             const d=dist(e,{x:cx,y:cy});
             if(d<effectRad){
                 const factor=1-d/effectRad;
-                e.hp-=damage*factor*0.8+15;
+                e.hp-=damage*factor*0.8+20;
                 if(e.hp<=0) e.alive=false;
+                else e.lastHitTime=Date.now();
             }
         });
         entities=entities.filter(e=>e.alive);
-        factions.forEach(f=>{ f.humans=f.humans.filter(h=>entities.includes(h)); updateFactionPolygon(f); });
+        factions.forEach(f=>{ f.humans=f.humans.filter(h=>entities.includes(h)); rebuildTerritory(f); });
         factions=factions.filter(f=>f.humans.length>0);
         disasters.push({x:cx,y:cy,radius:effectRad,life:90,type:'crater'});
         updateUI();
@@ -470,9 +591,11 @@
     function resetWorld(){
         entities=[]; disasters=[]; particles=[];
         factions=[]; factionIdCounter=0; villagePeak=0;
+        generateMountains();
         generateSprings();
         day=0; dayTimer=0;
         civilizationStarted=false; deathStreak=0; isApocalypse=false;
+        document.getElementById('warBanner').style.display='none';
         updateUI(); setStatus('🔄 世界已重置');
     }
 
@@ -513,7 +636,12 @@
         if(warring.length===0) return;
         for(let f of warring){
             const targets=entities.filter(e=>e.alive&&e.factionId!==null&&e.factionId!==f.id&&(e.type==='human'||e.type==='leader'||e.type==='village'));
-            if(targets.length===0) continue;
+            if(targets.length===0){
+                // 胜利
+                const others=factions.filter(x=>x.id!==f.id);
+                for(let o of others){ if(o.atWar){ endWar(f, o); } }
+                continue;
+            }
             const leaderTargets=targets.filter(e=>e.type==='leader');
             const targetList=leaderTargets.length>0?leaderTargets:targets;
             const attackers=entities.filter(e=>e.alive&&e.factionId===f.id&&(e.type==='human'||e.type==='leader'));
@@ -526,10 +654,11 @@
                     if(d<range && d<minD){ minD=d; closest=t; }
                 }
                 if(!closest) continue;
-                let atk=10+(getFactionById(f.id)?.atkBonus||0);
-                if(getFactionById(f.id)?.atWar && a.type==='leader') atk*=1.15;
-                if(a.type==='leader') atk*=1.2;
+                let atk=12+(getFactionById(f.id)?.atkBonus||0);
+                if(getFactionById(f.id)?.atWar && a.type==='leader') atk*=1.2;
+                if(a.type==='leader') atk*=1.25;
                 closest.hp-=atk;
+                closest.lastHitTime=Date.now();
                 a.attackCooldown=15;
                 if(closest.hp<=0){
                     closest.alive=false;
@@ -547,6 +676,16 @@
             if(f.leader && !entities.includes(f.leader)) f.leader=null;
         });
         factions=factions.filter(f=>f.humans.length>0);
+        // 检查是否有阵营被灭
+        for(let f of factions){
+            if(f.atWar){
+                const enemies=entities.filter(e=>e.alive&&e.factionId!==null&&e.factionId!==f.id);
+                if(enemies.length===0){
+                    const others=factions.filter(x=>x.id!==f.id);
+                    for(let o of others){ if(o.atWar){ endWar(f, o); } }
+                }
+            }
+        }
     }
 
     // ---- 主循环 ----
@@ -566,7 +705,7 @@
                     entities.filter(e=>e.type==='village'&&e.alive&&e.factionId===f.id).forEach(v=>{
                         if(Math.random()<0.08) spawnEntity('human', v.x+(Math.random()-0.5)*60, v.y+(Math.random()-0.5)*60, f.id);
                     });
-                    updateFactionPolygon(f);
+                    rebuildTerritory(f);
                     checkFactionUpgrade(f);
                 });
                 const animals=entities.filter(e=>e.type==='animal'&&e.alive);
@@ -581,11 +720,11 @@
                 }
             }
             if(civilizationStarted && day>5){
-                if(Math.random()<0.05){
+                if(Math.random()<0.04){
                     const rx=40+Math.random()*(W-80), ry=40+Math.random()*(H-80);
                     spawnDisaster('meteor',rx,ry);
                 }
-                if(day>15 && Math.random()<0.025){
+                if(day>15 && Math.random()<0.02){
                     const rx=40+Math.random()*(W-80), ry=40+Math.random()*(H-80);
                     spawnDisaster('asteroid',rx,ry);
                 }
@@ -596,16 +735,48 @@
 
         if(Math.floor(dayTimer*60)%4===0) autoFormVillages();
 
-        // 人类行为
+        // ---- 人类行为 ----
         entities.forEach(e=>{
             if(!e.alive || e.type!=='human') return;
             e.age++;
+
+            // 战斗状态：追击敌人
+            if(e.factionId!==null){
+                const f=getFactionById(e.factionId);
+                if(f && f.atWar){
+                    e.moveState='fighting';
+                    // 找最近的敌人
+                    const enemies=entities.filter(en=>en.alive&&en.factionId!==null&&en.factionId!==e.factionId&&(en.type==='human'||en.type==='leader'));
+                    if(enemies.length>0){
+                        let nearest=null, nd=Infinity;
+                        for(let en of enemies){
+                            const d=dist(e,en);
+                            if(d<nd){ nd=d; nearest=en; }
+                        }
+                        if(nearest && nd<200){
+                            e.targetX=nearest.x;
+                            e.targetY=nearest.y;
+                            const dx=e.targetX-e.x, dy=e.targetY-e.y;
+                            const d=Math.hypot(dx,dy);
+                            if(d>5){ const sp=0.6; e.x+=dx/d*sp; e.y+=dy/d*sp; }
+                            e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+                            updateFootprint(e);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // 无阵营或和平游荡
             if(e.factionId===null){
                 e.restTimer=(e.restTimer||0)+1;
                 if(!e.targetX || !e.targetY || e.restTimer>60+Math.random()*80){
                     e.restTimer=0;
                     e.targetX=20+Math.random()*(W-40);
                     e.targetY=20+Math.random()*(H-40);
+                    // 避开山脉
+                    const avoid=avoidMountains(e, {x:e.targetX, y:e.targetY});
+                    e.targetX=avoid.x; e.targetY=avoid.y;
                     e.moveState='moving';
                 }
                 const dx=e.targetX-e.x, dy=e.targetY-e.y;
@@ -613,27 +784,61 @@
                 if(d>2){ const sp=0.5+Math.random()*0.3; e.x+=dx/d*sp; e.y+=dy/d*sp; }
                 else { e.moveState='resting'; if(Math.random()<0.02){ e.targetX=20+Math.random()*(W-40); e.targetY=20+Math.random()*(H-40); } }
                 e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+                updateFootprint(e);
                 return;
             }
+
             const f=getFactionById(e.factionId);
             if(!f) return;
             const own=f.polygonPoints;
+            // 检测入侵
             for(let other of factions){
                 if(other.id===f.id || other.polygonPoints.length<3) continue;
-                if(pointInPolygon(e.x,e.y,other.polygonPoints)) checkAndDeclareWar(f.id,other.id);
+                if(pointInPolygon(e.x,e.y,other.polygonPoints)){
+                    checkAndDeclareWar(f.id, other.id);
+                }
             }
+
+            if(f.atWar){
+                e.moveState='fighting';
+                const enemies=entities.filter(en=>en.alive&&en.factionId!==null&&en.factionId!==e.factionId&&(en.type==='human'||en.type==='leader'));
+                if(enemies.length>0){
+                    let nearest=null, nd=Infinity;
+                    for(let en of enemies){
+                        const d=dist(e,en);
+                        if(d<nd){ nd=d; nearest=en; }
+                    }
+                    if(nearest && nd<250){
+                        e.targetX=nearest.x;
+                        e.targetY=nearest.y;
+                        const dx=e.targetX-e.x, dy=e.targetY-e.y;
+                        const d=Math.hypot(dx,dy);
+                        if(d>5){ const sp=0.6; e.x+=dx/d*sp; e.y+=dy/d*sp; }
+                        e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+                        updateFootprint(e);
+                        return;
+                    }
+                }
+                e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+                updateFootprint(e);
+                return;
+            }
+
+            // 和平游荡（有阵营）
             e.restTimer=(e.restTimer||0)+1;
             if(!e.targetX || !e.targetY || e.restTimer>50+Math.random()*70){
                 e.restTimer=0;
                 if(own.length>=3){
                     const idx=Math.floor(Math.random()*own.length);
                     const p=own[idx];
-                    e.targetX=p.x+(Math.random()-0.5)*60;
-                    e.targetY=p.y+(Math.random()-0.5)*60;
+                    e.targetX=p.x+(Math.random()-0.5)*80;
+                    e.targetY=p.y+(Math.random()-0.5)*80;
                 } else {
                     e.targetX=20+Math.random()*(W-40);
                     e.targetY=20+Math.random()*(H-40);
                 }
+                const avoid=avoidMountains(e, {x:e.targetX, y:e.targetY});
+                e.targetX=avoid.x; e.targetY=avoid.y;
                 e.targetX=Math.max(10,Math.min(W-10,e.targetX));
                 e.targetY=Math.max(10,Math.min(H-10,e.targetY));
                 e.moveState='moving';
@@ -643,13 +848,13 @@
             if(d>3){ const sp=0.4+Math.random()*0.3; e.x+=dx/d*sp; e.y+=dy/d*sp; e.moveState='moving'; }
             else e.moveState='resting';
             e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+            updateFootprint(e);
         });
 
         processAttacks();
 
         factions.forEach(f=>{
-            updateFactionPolygon(f);
-            if(f.polygonPoints.length>=3) autoClaimSpringsByTerritory(f);
+            rebuildTerritory(f);
         });
 
         particles=particles.filter(p=>{ p.x+=p.vx; p.y+=p.vy; p.vx*=0.98; p.vy*=0.98; p.life--; return p.life>0; });
@@ -668,11 +873,12 @@
         factions.forEach(f=>{
             f.humans=f.humans.filter(h=>entities.includes(h)&&h.alive);
             if(f.leader && !entities.includes(f.leader)) f.leader=null;
-            updateFactionPolygon(f);
+            rebuildTerritory(f);
             checkFactionUpgrade(f);
         });
         factions=factions.filter(f=>f.humans.length>0);
 
+        // ---- 灭世 ----
         if(civilizationStarted && !isApocalypse){
             const hc=countType('human'), vc=countType('village');
             if(villagePeak>=2){
@@ -684,83 +890,140 @@
         updateUI();
     }
 
+    // ---- 绘制 ----
     function draw(){
         ctx.fillStyle='#c4a86a';
         ctx.fillRect(0,0,W,H);
+
+        // 网格
         ctx.strokeStyle=GRID_COLOR;
         ctx.lineWidth=1;
         for(let i=0;i<W;i+=50){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
 
+        // ---- 山脉 ----
+        for(let range of mountains){
+            for(let p of range.points){
+                const r = range.width * 0.6;
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+                grad.addColorStop(0, '#6a5a3a');
+                grad.addColorStop(0.5, '#5a4a2a');
+                grad.addColorStop(1, '#4a3a1a');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+                ctx.fill();
+                // 阴影
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.beginPath();
+                ctx.arc(p.x+3, p.y+3, r*0.5, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        // ---- 泉水 ----
         springs.forEach(s=>{
             let color='#6a9ec4', glow='rgba(100,160,200,0.25)';
             if(s.ownerId!==null){ const f=getFactionById(s.ownerId); if(f){ color=f.color; glow=color+'30'; } }
             const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,70);
             g.addColorStop(0,glow); g.addColorStop(0.6,glow.replace('30','15')); g.addColorStop(1,'rgba(0,0,0,0)');
-            ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,70,0,2*Math.PI); ctx.fill();
-            ctx.shadowColor=color; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(s.x,s.y,s.radius,0,2*Math.PI); ctx.fill();
-            ctx.shadowBlur=0; ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.arc(s.x-4,s.y-5,5,0,2*Math.PI); ctx.fill();
+            ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,70,0,Math.PI*2); ctx.fill();
+            ctx.shadowColor=color; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(s.x,s.y,s.radius,0,Math.PI*2); ctx.fill();
+            ctx.shadowBlur=0; ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.arc(s.x-4,s.y-5,5,0,Math.PI*2); ctx.fill();
             if(s.ownerId!==null){ ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText('⚑',s.x,s.y-26); }
         });
 
-        const time=Date.now()/300;
+        // ---- 领土 ----
         factions.forEach(f=>{
             const pts=f.polygonPoints;
             if(pts.length<3) return;
             const color=f.color;
             let border=color+'80', lw=2;
-            if(f.atWar){ const flash=Math.sin(time)*0.5+0.5; border=`rgba(255,50,50,${0.5+flash*0.5})`; lw=3; }
+            if(f.atWar){ const flash=Math.sin(Date.now()/300)*0.5+0.5; border=`rgba(255,50,50,${0.5+flash*0.5})`; lw=3; }
             ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
             for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
             ctx.closePath();
-            ctx.fillStyle=color+'25'; ctx.fill();
-            ctx.strokeStyle=border; ctx.lineWidth=lw; ctx.setLineDash(f.atWar?[6,4]:[]); ctx.stroke(); ctx.setLineDash([]);
-            ctx.fillStyle=color+'60';
-            pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,3,0,2*Math.PI); ctx.fill(); });
+            ctx.fillStyle=color+'20'; ctx.fill();
+            ctx.strokeStyle=border; ctx.lineWidth=lw; ctx.setLineDash(f.atWar?[8,6]:[]); ctx.stroke(); ctx.setLineDash([]);
+            // 路径足迹点
+            if(f.footprints.length>0){
+                ctx.fillStyle=color+'40';
+                const step=Math.max(1, Math.floor(f.footprints.length/150));
+                for(let i=0;i<f.footprints.length;i+=step){
+                    const p=f.footprints[i];
+                    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
+                }
+            }
             let cx=0,cy=0; pts.forEach(p=>{ cx+=p.x; cy+=p.y; }); cx/=pts.length; cy/=pts.length;
-            ctx.fillStyle=color; ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.fillText(f.atWar?'⚔️':'⚑',cx,cy+5);
-            ctx.fillStyle='#f5c842'; ctx.font='12px sans-serif'; ctx.fillText(`Lv${f.level}`,cx,cy-20);
+            ctx.fillStyle=color; ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.fillText(f.atWar?'⚔️':'⚑',cx,cy+5);
+            ctx.fillStyle='#f5c842'; ctx.font='13px sans-serif'; ctx.fillText(`Lv${f.level}`,cx,cy-22);
         });
 
+        // 陨石坑
         disasters.forEach(d=>{
-            if(d.type==='crater'){ const a=d.life/90*0.5; ctx.beginPath(); ctx.arc(d.x,d.y,d.radius,0,2*Math.PI); ctx.fillStyle=`rgba(50,40,25,${a})`; ctx.fill(); ctx.strokeStyle=`rgba(80,65,45,${a*0.5})`; ctx.lineWidth=2; ctx.stroke(); }
+            if(d.type==='crater'){ const a=d.life/90*0.5; ctx.beginPath(); ctx.arc(d.x,d.y,d.radius,0,Math.PI*2); ctx.fillStyle=`rgba(50,40,25,${a})`; ctx.fill(); ctx.strokeStyle=`rgba(80,65,45,${a*0.5})`; ctx.lineWidth=2; ctx.stroke(); }
         });
 
+        // ---- 实体 ----
+        const now=Date.now();
         entities.forEach(e=>{
             if(!e.alive) return;
             const x=e.x, y=e.y;
+
             if(e.type==='human'){
                 let color='#7a9ab5';
                 if(e.factionId!==null){ const f=getFactionById(e.factionId); if(f) color=f.color; }
-                ctx.beginPath(); ctx.arc(x,y,7,0,2*Math.PI);
+                ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2);
                 ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=12; ctx.fill(); ctx.shadowBlur=0;
                 ctx.fillStyle='#e8ddd0'; ctx.font='12px sans-serif'; ctx.textAlign='center';
-                const icon=e.isRemote?'🏹':(e.moveState==='resting'?'💤':'👤');
+                const icon=e.isRemote?'🏹':(e.moveState==='fighting'?'⚔️':(e.moveState==='resting'?'💤':'👤'));
                 ctx.fillText(icon,x-6,y+5);
+                // 血条（受伤后短暂显示）
+                if(e.hp < e.maxHp && now - (e.lastHitTime||0) < 3000){
+                    const hp=e.hp/e.maxHp;
+                    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-12,y-16,24,4);
+                    ctx.fillStyle=hp>0.5?'#2ecc71':'#e74c3c'; ctx.fillRect(x-12,y-16,24*hp,4);
+                }
             } else if(e.type==='leader'){
                 const f=getFactionById(e.factionId); const color=f?f.color:'#ffd700';
-                ctx.shadowColor='#ffd700'; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,16,0,2*Math.PI); ctx.fill();
-                ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x-10,y+8);
+                // 大光晕
+                const grad=ctx.createRadialGradient(x,y,5,x,y,35);
+                grad.addColorStop(0,'rgba(255,215,0,0.5)'); grad.addColorStop(1,'rgba(255,215,0,0)');
+                ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(x,y,35,0,Math.PI*2); ctx.fill();
+                ctx.shadowColor='#ffd700'; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,18,0,Math.PI*2); ctx.fill();
+                ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.font='28px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x,y-24);
+                // 血条（持续显示）
                 const hp=e.hp/e.maxHp;
-                ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-20,y-28,40,5);
-                ctx.fillStyle=hp>0.5?'#2ecc71':'#e74c3c'; ctx.fillRect(x-20,y-28,40*hp,5);
+                ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(x-22,y-32,44,6);
+                ctx.fillStyle=hp>0.5?'#2ecc71':'#e74c3c'; ctx.fillRect(x-22,y-32,44*hp,6);
+                // 攻击标记
+                if(e.attackCooldown>0){
+                    ctx.fillStyle='rgba(255,200,0,0.3)'; ctx.beginPath(); ctx.arc(x,y,25,0,Math.PI*2); ctx.fill();
+                }
             } else if(e.type==='village'){
                 const f=getFactionById(e.factionId); const color=f?f.color:'#a07050';
-                ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=24; ctx.beginPath(); ctx.arc(x,y,20,0,2*Math.PI); ctx.fill();
-                ctx.shadowBlur=0; ctx.fillStyle='#f0e8d8'; ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏡',x-12,y+7);
+                ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=24; ctx.beginPath(); ctx.arc(x,y,20,0,Math.PI*2); ctx.fill();
+                ctx.shadowBlur=0; ctx.fillStyle='#f0e8d8'; ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏡',x-12,y+7);
+                if(e.hp < e.maxHp && now - (e.lastHitTime||0) < 3000){
+                    const hp=e.hp/e.maxHp;
+                    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-18,y-24,36,5);
+                    ctx.fillStyle=hp>0.5?'#2ecc71':'#e74c3c'; ctx.fillRect(x-18,y-24,36*hp,5);
+                }
             } else if(e.type==='tree'){
-                ctx.fillStyle='#5a8a5a'; ctx.shadowColor='#5a8a5a'; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(x,y,12,0,2*Math.PI); ctx.fill();
+                ctx.fillStyle='#5a8a5a'; ctx.shadowColor='#5a8a5a'; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(x,y,12,0,Math.PI*2); ctx.fill();
                 ctx.shadowBlur=0; ctx.fillStyle='#2a2a1a'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌳',x-8,y+5);
             } else if(e.type==='animal'){
-                ctx.fillStyle='#c49a6a'; ctx.shadowColor='#c49a6a'; ctx.shadowBlur=10; ctx.beginPath(); ctx.arc(x,y,10,0,2*Math.PI); ctx.fill();
+                ctx.fillStyle='#c49a6a'; ctx.shadowColor='#c49a6a'; ctx.shadowBlur=10; ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.fill();
                 ctx.shadowBlur=0; ctx.fillStyle='#e8ddd0'; ctx.font='14px sans-serif'; ctx.textAlign='center'; ctx.fillText('🐾',x-7,y+6);
             }
         });
 
+        // 粒子
         particles.forEach(p=>{
             const a=p.life/p.maxLife;
-            ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,4*a+1,0,2*Math.PI); ctx.fill(); ctx.globalAlpha=1;
+            ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,4*a+1,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
         });
 
+        // 灭世
         if(isApocalypse){
             ctx.fillStyle='rgba(20,15,10,0.80)'; ctx.fillRect(0,0,W,H);
             ctx.fillStyle='#ff4757'; ctx.font='bold 120px "Segoe UI",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('OUT',W/2,H/2-20);
@@ -772,9 +1035,11 @@
 
     function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
+    // ---- 初始化 ----
+    generateMountains();
     generateSprings();
     renderRank();
-    setStatus('⛲ 1200x1200 · 头领 · 升级 · 战争');
+    setStatus('⛲ 山脉 · 路径领土 · 战争 · 首领');
     loop();
 })();
 </script>
