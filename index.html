@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>文明之源 - 泉水归属</title>
+    <title>文明 - 泉水自动归属</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #0b0e14;
+            background: #1a170f;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             font-family: 'Segoe UI', system-ui, sans-serif;
-            color: #c8d6e5;
+            color: #d4c5a0;
             touch-action: none;
             user-select: none;
         }
         .container {
-            background: #1a1f2b;
+            background: #2a2418;
             padding: 16px;
             border-radius: 28px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            max-width: 720px;
+            max-width: 820px;
             width: 100%;
             margin: 10px;
         }
@@ -30,10 +30,10 @@
             position: relative;
             width: 100%;
             aspect-ratio: 1/1;
-            background: #2d3548;
+            background: #c4a86a;
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
         }
         canvas {
             display: block;
@@ -51,12 +51,13 @@
             gap: 6px;
         }
         .info-panel span {
-            background: #252d3f;
+            background: #1f1a10;
             padding: 4px 14px;
             border-radius: 40px;
             font-size: 14px;
             font-weight: 600;
-            color: #a0b8d0;
+            color: #b8a882;
+            border: 1px solid #3a3220;
         }
         .info-panel .highlight { color: #f5c842; }
         .toolbar {
@@ -67,36 +68,36 @@
             justify-content: center;
         }
         .toolbar button {
-            background: #2a3348;
-            border: none;
+            background: #1f1a10;
+            border: 1px solid #3a3220;
             border-radius: 40px;
             padding: 6px 14px;
             font-size: 13px;
             font-weight: 600;
-            color: #c8d6e5;
-            box-shadow: 0 3px 0 #0f141f;
+            color: #d4c5a0;
+            box-shadow: 0 3px 0 #0f0c08;
             transition: 0.07s ease;
             touch-action: manipulation;
             cursor: pointer;
             flex: 0 1 auto;
             white-space: nowrap;
         }
-        .toolbar button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0f141f; }
-        .toolbar .danger { color: #ff6b6b; border-left: 2px solid #ff6b6b; }
-        .toolbar .create { color: #6bcf7f; border-left: 2px solid #6bcf7f; }
+        .toolbar button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0f0c08; }
+        .toolbar .danger { color: #e86a5f; border-left: 2px solid #e86a5f; }
+        .toolbar .create { color: #7aba7a; border-left: 2px solid #7aba7a; }
         .toolbar .special { color: #f5c842; border-left: 2px solid #f5c842; }
         .status-line {
             font-size: 13px;
-            color: #7a8aa0;
+            color: #8a7a5a;
             text-align: center;
             margin-top: 6px;
             padding: 4px;
-            background: #141a26;
+            background: #1a150e;
             border-radius: 40px;
         }
         .rank-panel {
             margin-top: 10px;
-            background: #141a26;
+            background: #1a150e;
             border-radius: 16px;
             padding: 10px 14px;
             display: flex;
@@ -107,14 +108,13 @@
         }
         .rank-panel .title { font-weight: 700; color: #f5c842; font-size: 15px; width: 100%; margin-bottom: 4px; }
         .rank-list { display: flex; flex-wrap: wrap; gap: 6px 16px; flex: 1; }
-        .rank-item { font-size: 13px; color: #a0b8d0; background: #1f273a; padding: 2px 12px; border-radius: 30px; white-space: nowrap; }
-        .rank-item .pos { color: #7a8aa0; margin-right: 4px; }
+        .rank-item { font-size: 13px; color: #b8a882; background: #2a2418; padding: 2px 12px; border-radius: 30px; border: 1px solid #3a3220; }
+        .rank-item .pos { color: #7a6a50; margin-right: 4px; }
         .rank-item .days { color: #f5c842; font-weight: 700; }
         .rank-actions { display: flex; gap: 6px; align-items: center; }
-        .rank-actions button { background: #2a3348; border: none; border-radius: 30px; padding: 3px 14px; font-size: 12px; color: #a0b8d0; cursor: pointer; box-shadow: 0 2px 0 #0f141f; touch-action: manipulation; }
-        .rank-actions button:active { transform: translateY(2px); box-shadow: 0 0px 0 #0f141f; }
-        .rank-actions .clear-btn { color: #ff6b6b; }
-        .empty-rank { color: #5a6a80; font-size: 13px; }
+        .rank-actions button { background: #1f1a10; border: 1px solid #3a3220; border-radius: 30px; padding: 3px 14px; font-size: 12px; color: #b8a882; cursor: pointer; touch-action: manipulation; }
+        .rank-actions .clear-btn { color: #e86a5f; }
+        .empty-rank { color: #5a4a38; font-size: 13px; }
         @media (max-width: 480px) {
             .container { padding: 10px; }
             .toolbar button { font-size: 11px; padding: 5px 10px; }
@@ -126,7 +126,7 @@
 <body>
 <div class="container">
     <div class="game-wrapper">
-        <canvas id="worldCanvas" width="600" height="600"></canvas>
+        <canvas id="worldCanvas" width="900" height="900"></canvas>
     </div>
     <div class="info-panel">
         <span>📆 天数 <span id="dayDisplay" class="highlight">0</span></span>
@@ -135,7 +135,7 @@
         <span>🌳 <span id="treeCount">0</span></span>
         <span>🐾 <span id="animalCount">0</span></span>
         <span>⚔️ <span id="factionCount">0</span> 阵营</span>
-        <span>⛲ <span id="springCount">8</span> 泉水</span>
+        <span>⛲ <span id="springCount">0/8</span> 泉水</span>
     </div>
     <div class="toolbar">
         <button class="create" data-tool="human">👤 人</button>
@@ -147,8 +147,8 @@
         <button class="special" data-tool="asteroid">🌠 流星雨</button>
         <button class="special" data-tool="reset">🔄 重置</button>
     </div>
-    <div class="status-line" id="statusMessage">⛲ 泉水被占领后，其他势力无法再使用</div>
-    <div class="rank-panel" id="rankPanel">
+    <div class="status-line" id="statusMessage">⛲ 领土扩张会主动占据中立泉水</div>
+    <div class="rank-panel">
         <div class="title">🏆 灭世时长榜</div>
         <div class="rank-list" id="rankList"><span class="empty-rank">暂无记录</span></div>
         <div class="rank-actions"><button class="clear-btn" id="clearRankBtn">清除</button></div>
@@ -159,11 +159,12 @@
     (function(){
         const canvas = document.getElementById('worldCanvas');
         const ctx = canvas.getContext('2d');
-        const W = 600, H = 600;
+        const W = 900, H = 900;
         const SPRING_RADIUS = 80;
         const SPRING_COUNT = 8;
+        const EXPAND_SPEED = 0.3;
+        const GRID_COLOR = 'rgba(60, 50, 30, 0.12)';
 
-        // ---- 泉水（带归属） ----
         let springs = [];
 
         function generateSprings() {
@@ -171,16 +172,16 @@
             for (let i = 0; i < SPRING_COUNT; i++) {
                 let attempts = 0, x, y, valid;
                 do {
-                    x = 30 + Math.random() * (W - 60);
-                    y = 30 + Math.random() * (H - 60);
+                    x = 40 + Math.random() * (W - 80);
+                    y = 40 + Math.random() * (H - 80);
                     valid = true;
                     for (let s of springs) {
                         const dx = s.x - x, dy = s.y - y;
-                        if (Math.sqrt(dx*dx + dy*dy) < 70) { valid = false; break; }
+                        if (Math.sqrt(dx*dx + dy*dy) < 90) { valid = false; break; }
                     }
                     attempts++;
-                } while (!valid && attempts < 100);
-                springs.push({ x, y, radius: 12, ownerId: null }); // ownerId: 阵营id
+                } while (!valid && attempts < 150);
+                springs.push({ x, y, radius: 14, ownerId: null });
             }
         }
 
@@ -192,28 +193,21 @@
             return false;
         }
 
-        // 检查是否可以在该位置建立村庄（泉水未被其他阵营占领）
         function canClaimSpring(x, y, factionId) {
             for (let s of springs) {
                 const dx = s.x - x, dy = s.y - y;
                 if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS) {
-                    // 如果泉水已被其他阵营占领，不能建
-                    if (s.ownerId !== null && s.ownerId !== factionId) {
-                        return false;
-                    }
+                    if (s.ownerId !== null && s.ownerId !== factionId) return false;
                 }
             }
             return true;
         }
 
-        // 占领泉水
         function claimSpring(x, y, factionId) {
             for (let s of springs) {
                 const dx = s.x - x, dy = s.y - y;
-                if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS) {
-                    if (s.ownerId === null) {
-                        s.ownerId = factionId;
-                    }
+                if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS && s.ownerId === null) {
+                    s.ownerId = factionId;
                 }
             }
         }
@@ -228,11 +222,23 @@
             return nearest;
         }
 
-        // ---- 阵营颜色 ----
-        const FACTION_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c', '#e67e22', '#e84393'];
+        function autoClaimSpringsByTerritory(faction) {
+            const radius = faction.radius;
+            const cx = faction.cx, cy = faction.cy;
+            for (let s of springs) {
+                if (s.ownerId !== null) continue;
+                const dx = s.x - cx, dy = s.y - cy;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist <= radius) {
+                    s.ownerId = faction.id;
+                    setStatus(`⛲ 领土扩张，占据了一处中立泉水！`);
+                }
+            }
+        }
+
+        const FACTION_COLORS = ['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad', '#16a085', '#d35400', '#e74c8b', '#2c3e50', '#7f8c8d'];
         let factionIdCounter = 0;
 
-        // ---- 状态 ----
         let day = 0, dayTimer = 0;
         const DAY_INTERVAL = 60;
         let entities = [], disasters = [], particles = [];
@@ -243,7 +249,6 @@
         const DEATH_THRESHOLD = 5;
         let isApocalypse = false;
 
-        // ---- 排行榜 ----
         const STORAGE_KEY = 'god_sandbox_rank';
         function loadRank() { try { const d = localStorage.getItem(STORAGE_KEY); return d ? JSON.parse(d) : []; } catch(e) { return []; } }
         function saveRank(r) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
@@ -257,7 +262,6 @@
         }
         document.getElementById('clearRankBtn').addEventListener('click', clearRank);
 
-        // ---- 工具函数 ----
         function countType(type) { return entities.filter(e => e.type === type && e.alive).length; }
         function updateUI() {
             document.getElementById('dayDisplay').textContent = day;
@@ -271,18 +275,16 @@
         }
         function setStatus(msg) { document.getElementById('statusMessage').textContent = msg; }
 
-        // ---- 阵营 ----
         function createFaction(x, y) {
             const color = FACTION_COLORS[factionIdCounter % FACTION_COLORS.length];
             factionIdCounter++;
-            const faction = { id: factionIdCounter, color: color, cx: x, cy: y, radius: 40, humans: [] };
+            const faction = { id: factionIdCounter, color: color, cx: x, cy: y, radius: 30, humans: [] };
             factions.push(faction);
             return faction;
         }
 
         function getFactionById(id) { return factions.find(f => f.id === id); }
 
-        // ---- 领土扩张 ----
         function expandFactionTerritory(faction) {
             const humans = entities.filter(e => e.type === 'human' && e.alive && e.factionId === faction.id);
             if (humans.length === 0) return;
@@ -293,7 +295,7 @@
                 if (dist > maxDist) maxDist = dist;
             });
             if (maxDist <= faction.radius) return;
-            let newRadius = faction.radius + 1;
+            let newRadius = faction.radius + EXPAND_SPEED;
             let collides = false;
             for (let other of factions) {
                 if (other.id === faction.id) continue;
@@ -301,73 +303,58 @@
                 const dist = Math.sqrt(dx*dx + dy*dy);
                 if (newRadius + other.radius > dist) { collides = true; break; }
             }
-            if (!collides) faction.radius = newRadius;
+            if (!collides) {
+                faction.radius = newRadius;
+                // 扩张后检查是否覆盖中立泉水
+                autoClaimSpringsByTerritory(faction);
+            }
         }
 
-        // ---- 生成实体 ----
         function spawnEntity(type, x, y, factionId = null) {
             if (type === 'human' || type === 'village') civilizationStarted = true;
 
             if (type === 'village') {
-                // 检查是否在泉水附近
                 if (!isNearSpring(x, y)) {
                     setStatus('❌ 村庄必须靠近泉水！');
                     return;
                 }
-
-                // 检查泉水是否已被其他阵营占领
                 let targetFactionId = factionId;
                 if (targetFactionId === null) {
-                    // 自动检测最近的泉水归属
                     const nearest = getNearestSpring(x, y);
                     if (nearest && nearest.ownerId !== null) {
                         targetFactionId = nearest.ownerId;
                     }
                 }
-
-                // 如果是新阵营，检查是否有中立泉水可用
                 if (targetFactionId === null) {
-                    // 检查该位置是否有中立泉水
                     let hasNeutral = false;
                     for (let s of springs) {
                         const dx = s.x - x, dy = s.y - y;
                         if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS && s.ownerId === null) {
-                            hasNeutral = true;
-                            break;
+                            hasNeutral = true; break;
                         }
                     }
                     if (!hasNeutral) {
                         setStatus('❌ 该区域没有可用的中立泉水！');
                         return;
                     }
-                    // 创建新阵营
                     const faction = createFaction(x, y);
                     targetFactionId = faction.id;
-                    // 占领泉水
                     claimSpring(x, y, targetFactionId);
-                    const village = { x, y, type: 'village', age: 0, alive: true, hp: 200, radius: 18, factionId: targetFactionId };
+                    const village = { x, y, type: 'village', age: 0, alive: true, hp: 200, radius: 20, factionId: targetFactionId };
                     entities.push(village);
                     faction.humans.push(village);
                     setStatus(`🏡 新阵营诞生！占领了泉水！`);
                     updateUI();
                     return;
                 }
-
-                // 已有阵营，检查泉水是否被其他阵营占领
                 if (!canClaimSpring(x, y, targetFactionId)) {
                     setStatus('❌ 该泉水已被其他阵营占领！');
                     return;
                 }
-
                 const faction = getFactionById(targetFactionId);
-                if (!faction) {
-                    setStatus('❌ 阵营不存在');
-                    return;
-                }
-
-                // 占领泉水（如果还未被该阵营占领）
+                if (!faction) { setStatus('❌ 阵营不存在'); return; }
                 claimSpring(x, y, targetFactionId);
-                const village = { x, y, type: 'village', age: 0, alive: true, hp: 200, radius: 18, factionId: targetFactionId };
+                const village = { x, y, type: 'village', age: 0, alive: true, hp: 200, radius: 20, factionId: targetFactionId };
                 entities.push(village);
                 faction.humans.push(village);
                 setStatus(`🏡 村庄建立！`);
@@ -375,7 +362,6 @@
                 return;
             }
 
-            // 人类生成
             if (type === 'human') {
                 let targetFaction = null;
                 if (factionId !== null) {
@@ -402,14 +388,13 @@
             }
 
             switch(type) {
-                case 'tree': entities.push({ x, y, type: 'tree', age: 0, alive: true, hp: 50, radius: 12 }); break;
-                case 'animal': entities.push({ x, y, type: 'animal', age: 0, alive: true, hp: 60, vx: 0, vy: 0, moveTimer: 0 }); break;
+                case 'tree': entities.push({ x, y, type: 'tree', age: 0, alive: true, hp: 60, radius: 14 }); break;
+                case 'animal': entities.push({ x, y, type: 'animal', age: 0, alive: true, hp: 70, vx: 0, vy: 0, moveTimer: 0 }); break;
                 default: break;
             }
             updateUI();
         }
 
-        // ---- 自动村庄生成 ----
         function autoFormVillages() {
             const humans = entities.filter(e => e.type === 'human' && e.alive && e.factionId === null);
             if (humans.length < 3) return;
@@ -432,13 +417,11 @@
                     const cy = gy * GRID_SIZE + GRID_SIZE/2;
                     if (!isNearSpring(cx, cy)) continue;
 
-                    // 检查是否有中立泉水
                     let hasNeutralSpring = false;
                     for (let s of springs) {
                         const dx = s.x - cx, dy = s.y - cy;
                         if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS && s.ownerId === null) {
-                            hasNeutralSpring = true;
-                            break;
+                            hasNeutralSpring = true; break;
                         }
                     }
                     if (!hasNeutralSpring) continue;
@@ -451,10 +434,9 @@
                     if (!hasVillage) {
                         const nearest = getNearestSpring(cx, cy);
                         if (nearest && nearest.ownerId === null) {
-                            // 创建新阵营（自动占领泉水）
                             const faction = createFaction(cx, cy);
                             claimSpring(cx, cy, faction.id);
-                            const village = { x: cx, y: cy, type: 'village', age: 0, alive: true, hp: 200, radius: 18, factionId: faction.id };
+                            const village = { x: cx, y: cy, type: 'village', age: 0, alive: true, hp: 200, radius: 20, factionId: faction.id };
                             entities.push(village);
                             faction.humans.push(village);
                             humanList.forEach(h => {
@@ -468,15 +450,14 @@
             }
         }
 
-        // ---- 灾难 ----
         function spawnDisaster(type, cx, cy) {
-            const radius = type === 'nuke' ? 80 : (type === 'asteroid' ? 45 : 35);
-            const damage = type === 'nuke' ? 150 : (type === 'asteroid' ? 60 : 40);
-            const effectRadius = type === 'nuke' ? 120 : (type === 'asteroid' ? 90 : 70);
-            for (let i = 0; i < (type === 'nuke' ? 80 : 40); i++) {
+            const radius = type === 'nuke' ? 90 : (type === 'asteroid' ? 50 : 40);
+            const damage = type === 'nuke' ? 180 : (type === 'asteroid' ? 70 : 50);
+            const effectRadius = type === 'nuke' ? 140 : (type === 'asteroid' ? 110 : 90);
+            for (let i = 0; i < (type === 'nuke' ? 100 : 50); i++) {
                 const angle = Math.random() * 2 * Math.PI;
-                const speed = 1 + Math.random() * (type === 'nuke' ? 6 : 3);
-                particles.push({ x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life: 30+Math.random()*30, maxLife: 60, color: type==='nuke'?'#ff6b35':'#f5c842' });
+                const speed = 1 + Math.random() * (type === 'nuke' ? 7 : 4);
+                particles.push({ x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life: 30+Math.random()*30, maxLife: 60, color: type==='nuke'?'#e86a5f':'#f5c842' });
             }
             entities.forEach(e => {
                 const dx = e.x - cx, dy = e.y - cy;
@@ -490,22 +471,20 @@
             entities = entities.filter(e => e.alive);
             factions.forEach(f => { f.humans = f.humans.filter(h => entities.includes(h)); });
             factions = factions.filter(f => f.humans.length > 0);
-            disasters.push({ x: cx, y: cy, radius: effectRadius, life: 80, type: 'crater' });
+            disasters.push({ x: cx, y: cy, radius: effectRadius, life: 90, type: 'crater' });
             updateUI();
             setStatus(`💥 ${type} 爆炸！半径 ${Math.round(effectRadius)}`);
         }
 
-        // ---- 重置 ----
         function resetWorld() {
             entities = []; disasters = []; particles = [];
             factions = []; factionIdCounter = 0;
             generateSprings();
             day = 0; dayTimer = 0;
             civilizationStarted = false; deathStreak = 0; isApocalypse = false;
-            updateUI(); setStatus('🔄 世界已重置，泉水已重新生成');
+            updateUI(); setStatus('🔄 世界已重置');
         }
 
-        // ---- 工具 ----
         document.querySelectorAll('[data-tool]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = e.currentTarget.dataset.tool;
@@ -530,16 +509,15 @@
             else if (selectedTool === 'meteor') spawnDisaster('meteor', x, y);
             else if (selectedTool === 'nuke') spawnDisaster('nuke', x, y);
             else if (selectedTool === 'asteroid') {
-                for (let i = 0; i < 4 + Math.floor(Math.random() * 3); i++) {
-                    const ox = x + (Math.random() - 0.5) * 150;
-                    const oy = y + (Math.random() - 0.5) * 150;
-                    setTimeout(() => { spawnDisaster('asteroid', Math.max(10, Math.min(W-10, ox)), Math.max(10, Math.min(H-10, oy))); }, i*200);
+                for (let i = 0; i < 5 + Math.floor(Math.random() * 4); i++) {
+                    const ox = x + (Math.random() - 0.5) * 200;
+                    const oy = y + (Math.random() - 0.5) * 200;
+                    setTimeout(() => { spawnDisaster('asteroid', Math.max(15, Math.min(W-15, ox)), Math.max(15, Math.min(H-15, oy))); }, i*180);
                 }
                 setStatus('🌠 流星雨来袭！');
             }
         });
 
-        // ---- 更新 ----
         function update() {
             if (isApocalypse) return;
 
@@ -549,37 +527,37 @@
                 if (civilizationStarted) {
                     factions.forEach(f => {
                         const fHumans = entities.filter(e => e.type === 'human' && e.alive && e.factionId === f.id);
-                        if (fHumans.length > 0 && Math.random() < 0.15) {
+                        if (fHumans.length > 0 && Math.random() < 0.12) {
                             const h = fHumans[Math.floor(Math.random() * fHumans.length)];
-                            spawnEntity('human', h.x + (Math.random()-0.5)*40, h.y + (Math.random()-0.5)*40, f.id);
+                            spawnEntity('human', h.x + (Math.random()-0.5)*50, h.y + (Math.random()-0.5)*50, f.id);
                         }
                         const villages = entities.filter(e => e.type === 'village' && e.alive && e.factionId === f.id);
                         villages.forEach(v => {
-                            if (Math.random() < 0.10) {
-                                spawnEntity('human', v.x + (Math.random()-0.5)*50, v.y + (Math.random()-0.5)*50, f.id);
+                            if (Math.random() < 0.08) {
+                                spawnEntity('human', v.x + (Math.random()-0.5)*60, v.y + (Math.random()-0.5)*60, f.id);
                             }
                         });
                     });
                     const animals = entities.filter(e => e.type === 'animal' && e.alive);
-                    if (animals.length > 1 && Math.random() < 0.12) {
+                    if (animals.length > 1 && Math.random() < 0.10) {
                         const a = animals[Math.floor(Math.random() * animals.length)];
-                        spawnEntity('animal', a.x + (Math.random()-0.5)*30, a.y + (Math.random()-0.5)*30);
+                        spawnEntity('animal', a.x + (Math.random()-0.5)*40, a.y + (Math.random()-0.5)*40);
                     }
                     const trees = entities.filter(e => e.type === 'tree' && e.alive);
-                    if (trees.length > 0 && Math.random() < 0.08) {
+                    if (trees.length > 0 && Math.random() < 0.06) {
                         const t = trees[Math.floor(Math.random() * trees.length)];
-                        spawnEntity('tree', t.x + (Math.random()-0.5)*50, t.y + (Math.random()-0.5)*50);
+                        spawnEntity('tree', t.x + (Math.random()-0.5)*60, t.y + (Math.random()-0.5)*60);
                     }
                 }
                 if (civilizationStarted && day > 5) {
-                    if (Math.random() < 0.06) {
-                        const rx = 50 + Math.random() * (W - 100);
-                        const ry = 50 + Math.random() * (H - 100);
+                    if (Math.random() < 0.05) {
+                        const rx = 40 + Math.random() * (W - 80);
+                        const ry = 40 + Math.random() * (H - 80);
                         spawnDisaster('meteor', rx, ry);
                     }
-                    if (day > 15 && Math.random() < 0.03) {
-                        const rx = 50 + Math.random() * (W - 100);
-                        const ry = 50 + Math.random() * (H - 100);
+                    if (day > 15 && Math.random() < 0.025) {
+                        const rx = 40 + Math.random() * (W - 80);
+                        const ry = 40 + Math.random() * (H - 80);
                         spawnDisaster('asteroid', rx, ry);
                     }
                 }
@@ -587,7 +565,7 @@
                 setStatus(`📆 第 ${day} 天`);
             }
 
-            if (Math.floor(dayTimer * 60) % 3 === 0) {
+            if (Math.floor(dayTimer * 60) % 4 === 0) {
                 autoFormVillages();
             }
 
@@ -603,8 +581,8 @@
                     e.moveTimer = (e.moveTimer || 0) + 1;
                     if (e.moveTimer > 40 + Math.random() * 60) {
                         e.moveTimer = 0;
-                        e.vx = (Math.random() - 0.5) * 1.2;
-                        e.vy = (Math.random() - 0.5) * 1.2;
+                        e.vx = (Math.random() - 0.5) * 1.0;
+                        e.vy = (Math.random() - 0.5) * 1.0;
                     }
                     e.x += (e.vx || 0); e.y += (e.vy || 0);
                     e.x = Math.max(5, Math.min(W-5, e.x));
@@ -614,8 +592,8 @@
                     e.moveTimer = (e.moveTimer || 0) + 1;
                     if (e.moveTimer > 20 + Math.random() * 40) {
                         e.moveTimer = 0;
-                        e.vx = (Math.random() - 0.5) * 1.8;
-                        e.vy = (Math.random() - 0.5) * 1.8;
+                        e.vx = (Math.random() - 0.5) * 1.6;
+                        e.vy = (Math.random() - 0.5) * 1.6;
                     }
                     e.x += (e.vx || 0); e.y += (e.vy || 0);
                     e.x = Math.max(5, Math.min(W-5, e.x));
@@ -630,7 +608,7 @@
             if (civilizationStarted && !isApocalypse) {
                 const hc = countType('human'), vc = countType('village');
                 if ((hc <= 1 && vc === 0) || (hc === 0 && vc <= 1)) deathStreak += 1/60;
-                else { if (hc >= 2 || vc >= 2) deathStreak = Math.max(0, deathStreak - 0.5); }
+                else { if (hc >= 2 || vc >= 2) deathStreak = Math.max(0, deathStreak - 0.3); }
                 if (deathStreak >= DEATH_THRESHOLD) {
                     isApocalypse = true;
                     addRank(day);
@@ -640,19 +618,20 @@
             updateUI();
         }
 
-        // ---- 绘制 ----
         function draw() {
-            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#c4a86a';
+            ctx.fillRect(0, 0, W, H);
 
-            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+            ctx.strokeStyle = GRID_COLOR;
             ctx.lineWidth = 1;
-            for (let i = 0; i < W; i += 40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+            for (let i = 0; i < W; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+            }
 
-            // ---- 泉水 ----
             springs.forEach(s => {
-                // 泉水颜色：中立为蓝色，占领后为阵营颜色
-                let color = '#64c8ff';
-                let glowColor = 'rgba(100, 200, 255, 0.25)';
+                let color = '#6a9ec4';
+                let glowColor = 'rgba(100, 160, 200, 0.25)';
                 if (s.ownerId !== null) {
                     const f = getFactionById(s.ownerId);
                     if (f) {
@@ -661,73 +640,68 @@
                     }
                 }
 
-                // 光晕
-                const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 60);
+                const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 70);
                 gradient.addColorStop(0, glowColor);
-                gradient.addColorStop(0.5, glowColor.replace('30', '15'));
+                gradient.addColorStop(0.6, glowColor.replace('30', '15'));
                 gradient.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, 60, 0, 2*Math.PI);
+                ctx.arc(s.x, s.y, 70, 0, 2*Math.PI);
                 ctx.fill();
 
-                // 泉水主体
                 ctx.shadowColor = color;
-                ctx.shadowBlur = 25;
+                ctx.shadowBlur = 30;
                 ctx.fillStyle = color;
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.radius, 0, 2*Math.PI);
                 ctx.fill();
 
-                ctx.shadowBlur = 10;
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.beginPath();
-                ctx.arc(s.x - 3, s.y - 4, 5, 0, 2*Math.PI);
-                ctx.fill();
                 ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(s.x - 4, s.y - 5, 5, 0, 2*Math.PI);
+                ctx.fill();
 
-                // 归属标记
                 if (s.ownerId !== null) {
-                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                    ctx.font = '10px sans-serif';
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.font = '12px sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText('⚑', s.x, s.y - 20);
+                    ctx.fillText('⚑', s.x, s.y - 26);
                 }
             });
 
-            // ---- 阵营领土 ----
             factions.forEach(f => {
                 const gradient = ctx.createRadialGradient(f.cx, f.cy, 0, f.cx, f.cy, f.radius);
                 const color = f.color;
-                gradient.addColorStop(0, color + '40');
-                gradient.addColorStop(0.6, color + '25');
+                gradient.addColorStop(0, color + '35');
+                gradient.addColorStop(0.5, color + '20');
                 gradient.addColorStop(1, color + '05');
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
                 ctx.arc(f.cx, f.cy, f.radius, 0, 2*Math.PI);
                 ctx.fill();
 
-                ctx.strokeStyle = color + '60';
+                ctx.strokeStyle = color + '50';
                 ctx.lineWidth = 1.5;
-                ctx.setLineDash([6, 8]);
+                ctx.setLineDash([8, 10]);
                 ctx.beginPath();
                 ctx.arc(f.cx, f.cy, f.radius, 0, 2*Math.PI);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
                 ctx.fillStyle = color;
-                ctx.font = '12px sans-serif';
+                ctx.font = '14px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('⚑', f.cx, f.cy - f.radius - 6);
+                ctx.fillText('⚑', f.cx, f.cy - f.radius - 8);
             });
 
             disasters.forEach(d => {
                 if (d.type === 'crater') {
-                    const alpha = d.life / 80 * 0.4;
+                    const alpha = d.life / 90 * 0.5;
                     ctx.beginPath(); ctx.arc(d.x, d.y, d.radius, 0, 2*Math.PI);
-                    ctx.fillStyle = `rgba(40,30,20,${alpha})`;
+                    ctx.fillStyle = `rgba(50, 40, 25, ${alpha})`;
                     ctx.fill();
-                    ctx.strokeStyle = `rgba(80,60,40,${alpha*0.6})`;
+                    ctx.strokeStyle = `rgba(80, 65, 45, ${alpha*0.5})`;
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 }
@@ -738,46 +712,56 @@
                 const x = e.x, y = e.y;
 
                 if (e.type === 'human') {
-                    let color = '#74b9ff';
+                    let color = '#7a9ab5';
                     if (e.factionId !== null) {
                         const f = getFactionById(e.factionId);
                         if (f) color = f.color;
                     }
-                    ctx.beginPath(); ctx.arc(x, y, 7, 0, 2*Math.PI);
+                    ctx.beginPath(); ctx.arc(x, y, 8, 0, 2*Math.PI);
                     ctx.fillStyle = color;
                     ctx.shadowColor = color;
-                    ctx.shadowBlur = 12;
+                    ctx.shadowBlur = 14;
                     ctx.fill();
                     ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#dfe6e9';
-                    ctx.font = '10px sans-serif';
+                    ctx.fillStyle = '#e8ddd0';
+                    ctx.font = '12px sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText('👤', x-5, y+4);
+                    ctx.fillText('👤', x-6, y+5);
                 } else if (e.type === 'village') {
                     const f = getFactionById(e.factionId);
-                    const color = f ? f.color : '#e17055';
+                    const color = f ? f.color : '#a07050';
                     ctx.fillStyle = color;
                     ctx.shadowColor = color;
-                    ctx.shadowBlur = 20;
-                    ctx.beginPath(); ctx.arc(x, y, 16, 0, 2*Math.PI);
+                    ctx.shadowBlur = 24;
+                    ctx.beginPath(); ctx.arc(x, y, 20, 0, 2*Math.PI);
                     ctx.fill();
                     ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#dfe6e9';
-                    ctx.font = '16px sans-serif';
+                    ctx.fillStyle = '#f0e8d8';
+                    ctx.font = '20px sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText('🏡', x-10, y+6);
+                    ctx.fillText('🏡', x-12, y+7);
                 } else if (e.type === 'tree') {
-                    ctx.fillStyle = '#00b894'; ctx.shadowColor = '#00b894'; ctx.shadowBlur = 10;
-                    ctx.beginPath(); ctx.arc(x, y, 10, 0, 2*Math.PI); ctx.fill();
+                    ctx.fillStyle = '#5a8a5a';
+                    ctx.shadowColor = '#5a8a5a';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath(); ctx.arc(x, y, 12, 0, 2*Math.PI);
+                    ctx.fill();
                     ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#2d3436'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
-                    ctx.fillText('🌳', x-7, y+4);
+                    ctx.fillStyle = '#2a2a1a';
+                    ctx.font = '12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🌳', x-8, y+5);
                 } else if (e.type === 'animal') {
-                    ctx.fillStyle = '#fdcb6e'; ctx.shadowColor = '#fdcb6e'; ctx.shadowBlur = 8;
-                    ctx.beginPath(); ctx.arc(x, y, 8, 0, 2*Math.PI); ctx.fill();
+                    ctx.fillStyle = '#c49a6a';
+                    ctx.shadowColor = '#c49a6a';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(x, y, 10, 0, 2*Math.PI);
+                    ctx.fill();
                     ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#dfe6e9'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-                    ctx.fillText('🐾', x-6, y+5);
+                    ctx.fillStyle = '#e8ddd0';
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🐾', x-7, y+6);
                 }
             });
 
@@ -785,18 +769,25 @@
                 const alpha = p.life / p.maxLife;
                 ctx.globalAlpha = alpha;
                 ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 3 * alpha + 1, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, 4 * alpha + 1, 0, 2*Math.PI);
+                ctx.fill();
                 ctx.globalAlpha = 1;
             });
 
             if (isApocalypse) {
-                ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0,0,W,H);
-                ctx.fillStyle = '#ff6b6b'; ctx.font = 'bold 42px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText('💀 灭世', W/2, H/2-30);
-                ctx.fillStyle = '#c8d6e5'; ctx.font = '22px sans-serif';
-                ctx.fillText(`第 ${day} 天`, W/2, H/2+50);
-                ctx.fillStyle = '#7a8aa0'; ctx.font = '16px sans-serif';
-                ctx.fillText('点击「重置」重新开始', W/2, H/2+100);
+                ctx.fillStyle = 'rgba(20,15,10,0.65)';
+                ctx.fillRect(0,0,W,H);
+                ctx.fillStyle = '#e86a5f';
+                ctx.font = 'bold 48px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('💀 灭世', W/2, H/2 - 40);
+                ctx.fillStyle = '#d4c5a0';
+                ctx.font = '26px sans-serif';
+                ctx.fillText(`第 ${day} 天`, W/2, H/2 + 50);
+                ctx.fillStyle = '#7a6a50';
+                ctx.font = '18px sans-serif';
+                ctx.fillText('点击「重置」重新开始', W/2, H/2 + 110);
             }
             updateUI();
         }
@@ -805,7 +796,7 @@
 
         generateSprings();
         renderRank();
-        setStatus('⛲ 泉水被占领后归属该阵营，其他势力无法使用');
+        setStatus('⛲ 8个泉水，领土扩张会主动占据中立泉水');
         loop();
     })();
 </script>
