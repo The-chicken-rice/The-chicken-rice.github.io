@@ -2,131 +2,127 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>文明 - 泉水自动归属</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>文明 · 战争与领土</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: #1a170f;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            color: #d4c5a0;
-            touch-action: none;
-            user-select: none;
+            background:#1a170f;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+            font-family:'Segoe UI',system-ui,sans-serif;
+            color:#d4c5a0;
+            touch-action:none;
+            user-select:none;
         }
         .container {
-            background: #2a2418;
-            padding: 16px;
-            border-radius: 28px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            max-width: 820px;
-            width: 100%;
-            margin: 10px;
+            background:#2a2418;
+            padding:16px;
+            border-radius:28px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.8);
+            max-width:960px;
+            width:100%;
+            margin:10px;
         }
         .game-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1/1;
-            background: #c4a86a;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+            position:relative;
+            width:100%;
+            aspect-ratio:1/1;
+            background:#c4a86a;
+            border-radius:20px;
+            overflow:hidden;
+            box-shadow:inset 0 0 60px rgba(0,0,0,0.4);
         }
-        canvas {
-            display: block;
-            width: 100% !important;
-            height: 100% !important;
-            touch-action: none;
-            cursor: crosshair;
-        }
+        canvas { display:block; width:100% !important; height:100% !important; touch-action:none; cursor:crosshair; }
         .info-panel {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            margin: 12px 4px 8px;
-            gap: 6px;
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:space-between;
+            align-items:center;
+            margin:12px 4px 8px;
+            gap:6px;
         }
         .info-panel span {
-            background: #1f1a10;
-            padding: 4px 14px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #b8a882;
-            border: 1px solid #3a3220;
+            background:#1f1a10;
+            padding:4px 14px;
+            border-radius:40px;
+            font-size:14px;
+            font-weight:600;
+            color:#b8a882;
+            border:1px solid #3a3220;
         }
-        .info-panel .highlight { color: #f5c842; }
+        .info-panel .highlight { color:#f5c842; }
+        .info-panel .war-alert { color:#ff4757; border-color:#ff4757; animation:blink .8s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
         .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 8px 0 4px;
-            justify-content: center;
+            display:flex;
+            flex-wrap:wrap;
+            gap:6px;
+            margin:8px 0 4px;
+            justify-content:center;
         }
         .toolbar button {
-            background: #1f1a10;
-            border: 1px solid #3a3220;
-            border-radius: 40px;
-            padding: 6px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #d4c5a0;
-            box-shadow: 0 3px 0 #0f0c08;
-            transition: 0.07s ease;
-            touch-action: manipulation;
-            cursor: pointer;
-            flex: 0 1 auto;
-            white-space: nowrap;
+            background:#1f1a10;
+            border:1px solid #3a3220;
+            border-radius:40px;
+            padding:6px 14px;
+            font-size:13px;
+            font-weight:600;
+            color:#d4c5a0;
+            box-shadow:0 3px 0 #0f0c08;
+            transition:.07s ease;
+            touch-action:manipulation;
+            cursor:pointer;
+            flex:0 1 auto;
+            white-space:nowrap;
         }
-        .toolbar button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0f0c08; }
-        .toolbar .danger { color: #e86a5f; border-left: 2px solid #e86a5f; }
-        .toolbar .create { color: #7aba7a; border-left: 2px solid #7aba7a; }
-        .toolbar .special { color: #f5c842; border-left: 2px solid #f5c842; }
+        .toolbar button:active { transform:translateY(3px); box-shadow:0 1px 0 #0f0c08; }
+        .toolbar .danger { color:#e86a5f; border-left:2px solid #e86a5f; }
+        .toolbar .create { color:#7aba7a; border-left:2px solid #7aba7a; }
+        .toolbar .special { color:#f5c842; border-left:2px solid #f5c842; }
         .status-line {
-            font-size: 13px;
-            color: #8a7a5a;
-            text-align: center;
-            margin-top: 6px;
-            padding: 4px;
-            background: #1a150e;
-            border-radius: 40px;
+            font-size:13px;
+            color:#8a7a5a;
+            text-align:center;
+            margin-top:6px;
+            padding:4px;
+            background:#1a150e;
+            border-radius:40px;
         }
         .rank-panel {
-            margin-top: 10px;
-            background: #1a150e;
-            border-radius: 16px;
-            padding: 10px 14px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 8px;
+            margin-top:10px;
+            background:#1a150e;
+            border-radius:16px;
+            padding:10px 14px;
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:8px;
         }
-        .rank-panel .title { font-weight: 700; color: #f5c842; font-size: 15px; width: 100%; margin-bottom: 4px; }
-        .rank-list { display: flex; flex-wrap: wrap; gap: 6px 16px; flex: 1; }
-        .rank-item { font-size: 13px; color: #b8a882; background: #2a2418; padding: 2px 12px; border-radius: 30px; border: 1px solid #3a3220; }
-        .rank-item .pos { color: #7a6a50; margin-right: 4px; }
-        .rank-item .days { color: #f5c842; font-weight: 700; }
-        .rank-actions { display: flex; gap: 6px; align-items: center; }
-        .rank-actions button { background: #1f1a10; border: 1px solid #3a3220; border-radius: 30px; padding: 3px 14px; font-size: 12px; color: #b8a882; cursor: pointer; touch-action: manipulation; }
-        .rank-actions .clear-btn { color: #e86a5f; }
-        .empty-rank { color: #5a4a38; font-size: 13px; }
-        @media (max-width: 480px) {
-            .container { padding: 10px; }
-            .toolbar button { font-size: 11px; padding: 5px 10px; }
-            .info-panel span { font-size: 12px; padding: 3px 10px; }
-            .rank-item { font-size: 12px; padding: 2px 10px; }
+        .rank-panel .title { font-weight:700; color:#f5c842; font-size:15px; width:100%; margin-bottom:4px; }
+        .rank-list { display:flex; flex-wrap:wrap; gap:6px 16px; flex:1; }
+        .rank-item { font-size:13px; color:#b8a882; background:#2a2418; padding:2px 12px; border-radius:30px; border:1px solid #3a3220; }
+        .rank-item .pos { color:#7a6a50; margin-right:4px; }
+        .rank-item .days { color:#f5c842; font-weight:700; }
+        .rank-actions { display:flex; gap:6px; align-items:center; }
+        .rank-actions button { background:#1f1a10; border:1px solid #3a3220; border-radius:30px; padding:3px 14px; font-size:12px; color:#b8a882; cursor:pointer; touch-action:manipulation; }
+        .rank-actions .clear-btn { color:#e86a5f; }
+        .empty-rank { color:#5a4a38; font-size:13px; }
+        @media (max-width:480px) {
+            .container { padding:10px; }
+            .toolbar button { font-size:11px; padding:5px 10px; }
+            .info-panel span { font-size:12px; padding:3px 10px; }
+            .rank-item { font-size:12px; padding:2px 10px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="game-wrapper">
-        <canvas id="worldCanvas" width="900" height="900"></canvas>
+        <canvas id="worldCanvas" width="1200" height="1200"></canvas>
     </div>
     <div class="info-panel">
         <span>📆 天数 <span id="dayDisplay" class="highlight">0</span></span>
@@ -134,8 +130,9 @@
         <span>🏡 <span id="villageCount">0</span></span>
         <span>🌳 <span id="treeCount">0</span></span>
         <span>🐾 <span id="animalCount">0</span></span>
-        <span>⚔️ <span id="factionCount">0</span> 阵营</span>
-        <span>⛲ <span id="springCount">0/8</span> 泉水</span>
+        <span>⚔️ <span id="factionCount">0</span></span>
+        <span>⛲ <span id="springCount">0/12</span></span>
+        <span id="warStatus" class="war-alert" style="display:none;">⚔️ 战争！</span>
     </div>
     <div class="toolbar">
         <button class="create" data-tool="human">👤 人</button>
@@ -147,658 +144,639 @@
         <button class="special" data-tool="asteroid">🌠 流星雨</button>
         <button class="special" data-tool="reset">🔄 重置</button>
     </div>
-    <div class="status-line" id="statusMessage">⛲ 领土扩张会主动占据中立泉水</div>
+    <div class="status-line" id="statusMessage">⛲ 1200x1200 · 头领 · 升级 · 战争</div>
     <div class="rank-panel">
-        <div class="title">🏆 灭世时长榜</div>
+        <div class="title">🏆 存活时长榜</div>
         <div class="rank-list" id="rankList"><span class="empty-rank">暂无记录</span></div>
         <div class="rank-actions"><button class="clear-btn" id="clearRankBtn">清除</button></div>
     </div>
 </div>
 
 <script>
-    (function(){
-        const canvas = document.getElementById('worldCanvas');
-        const ctx = canvas.getContext('2d');
-        const W = 900, H = 900;
-        const SPRING_RADIUS = 80;
-        const SPRING_COUNT = 8;
-        const EXPAND_SPEED = 0.3;
-        const GRID_COLOR = 'rgba(60, 50, 30, 0.12)';
+(function(){
+    const canvas = document.getElementById('worldCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 1200, H = 1200;
+    const SPRING_RADIUS = 80;
+    const SPRING_COUNT = 12;
+    const WAR_THRESHOLD = 3;
+    const UPGRADE_THRESHOLD = 10;
+    const GRID_COLOR = 'rgba(60,50,30,0.10)';
 
-        let springs = [];
-
-        function generateSprings() {
-            springs = [];
-            for (let i = 0; i < SPRING_COUNT; i++) {
-                let attempts = 0, x, y, valid;
-                do {
-                    x = 40 + Math.random() * (W - 80);
-                    y = 40 + Math.random() * (H - 80);
-                    valid = true;
-                    for (let s of springs) {
-                        const dx = s.x - x, dy = s.y - y;
-                        if (Math.sqrt(dx*dx + dy*dy) < 90) { valid = false; break; }
-                    }
-                    attempts++;
-                } while (!valid && attempts < 150);
-                springs.push({ x, y, radius: 14, ownerId: null });
-            }
+    // ---- 工具 ----
+    function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+    function cross(o,a,b){ return (a.x-o.x)*(b.y-o.y) - (a.y-o.y)*(b.x-o.x); }
+    function convexHull(points){
+        if(points.length<3) return points;
+        const s = points.slice().sort((a,b)=>a.x-b.x||a.y-b.y);
+        const lower=[], upper=[];
+        for(let p of s){ while(lower.length>=2 && cross(lower[lower.length-2], lower[lower.length-1], p)<=0) lower.pop(); lower.push(p); }
+        for(let p of s){ while(upper.length>=2 && cross(upper[upper.length-2], upper[upper.length-1], p)<=0) upper.pop(); upper.push(p); }
+        lower.pop(); upper.pop();
+        return lower.concat(upper);
+    }
+    function pointInPolygon(px,py,poly){
+        let inside=false;
+        for(let i=0,j=poly.length-1; i<poly.length; j=i++){
+            const xi=poly[i].x, yi=poly[i].y, xj=poly[j].x, yj=poly[j].y;
+            if((yi>py)!==(yj>py) && px<(xj-xi)*(py-yi)/(yj-yi)+xi) inside=!inside;
         }
+        return inside;
+    }
 
-        function isNearSpring(x, y) {
-            for (let s of springs) {
-                const dx = s.x - x, dy = s.y - y;
-                if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS) return true;
-            }
-            return false;
+    // ---- 泉水 ----
+    let springs=[];
+    function generateSprings(){
+        springs=[];
+        for(let i=0;i<SPRING_COUNT;i++){
+            let attempts=0,x,y,valid;
+            do{
+                x=50+Math.random()*(W-100);
+                y=50+Math.random()*(H-100);
+                valid=true;
+                for(let s of springs) if(dist(s,{x,y})<120){ valid=false; break; }
+                attempts++;
+            }while(!valid && attempts<200);
+            springs.push({x,y,radius:14,ownerId:null});
         }
+    }
+    function isNearSpring(x,y){ for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS) return true; return false; }
+    function canClaimSpring(x,y,fid){ for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS && s.ownerId!==null && s.ownerId!==fid) return false; return true; }
+    function claimSpring(x,y,fid){ for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS && s.ownerId===null) s.ownerId=fid; }
+    function getNearestSpring(x,y){ let n=null,md=Infinity; for(let s of springs){ const d=dist(s,{x,y}); if(d<md){md=d;n=s;} } return n; }
+    function autoClaimSpringsByTerritory(f){
+        const pts=f.polygonPoints||[];
+        if(pts.length<3) return;
+        for(let s of springs){
+            if(s.ownerId!==null) continue;
+            if(pointInPolygon(s.x,s.y,pts)){ s.ownerId=f.id; setStatus('⛲ 领土扩张，占据中立泉水！'); }
+        }
+    }
 
-        function canClaimSpring(x, y, factionId) {
-            for (let s of springs) {
-                const dx = s.x - x, dy = s.y - y;
-                if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS) {
-                    if (s.ownerId !== null && s.ownerId !== factionId) return false;
+    const FACTION_COLORS = ['#c0392b','#2980b9','#27ae60','#f39c12','#8e44ad','#16a085','#d35400','#e74c8b','#2c3e50','#7f8c8d'];
+    let factionIdCounter=0;
+
+    let day=0, dayTimer=0;
+    const DAY_INTERVAL=60;
+    let entities=[], disasters=[], particles=[];
+    let factions=[];
+    let selectedTool='human';
+    let civilizationStarted=false;
+    let deathStreak=0;
+    const DEATH_THRESHOLD=5;
+    let isApocalypse=false;
+    let villagePeak=0;
+
+    // ---- 排行榜 ----
+    const STORAGE_KEY='god_sandbox_rank';
+    function loadRank(){ try{ const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):[]; }catch(e){ return []; } }
+    function saveRank(r){ localStorage.setItem(STORAGE_KEY,JSON.stringify(r)); }
+    function addRank(days){ if(days<=0)return; let r=loadRank(); r.push(days); r.sort((a,b)=>b-a); if(r.length>10)r=r.slice(0,10); saveRank(r); renderRank(); }
+    function clearRank(){ saveRank([]); renderRank(); }
+    function renderRank(){
+        const list=document.getElementById('rankList');
+        const rank=loadRank();
+        if(rank.length===0){ list.innerHTML='<span class="empty-rank">暂无记录</span>'; return; }
+        list.innerHTML=rank.map((d,i)=>`<span class="rank-item"><span class="pos">#${i+1}</span><span class="days">${d}</span> 天</span>`).join('');
+    }
+    document.getElementById('clearRankBtn').addEventListener('click',clearRank);
+
+    function countType(type){ return entities.filter(e=>e.type===type&&e.alive).length; }
+    function updateUI(){
+        document.getElementById('dayDisplay').textContent=day;
+        document.getElementById('humanCount').textContent=countType('human');
+        document.getElementById('villageCount').textContent=countType('village');
+        document.getElementById('treeCount').textContent=countType('tree');
+        document.getElementById('animalCount').textContent=countType('animal');
+        document.getElementById('factionCount').textContent=factions.length;
+        const claimed=springs.filter(s=>s.ownerId!==null).length;
+        document.getElementById('springCount').textContent=`${claimed}/${SPRING_COUNT}`;
+        const atWar=factions.some(f=>f.atWar);
+        document.getElementById('warStatus').style.display=atWar?'inline-block':'none';
+    }
+    function setStatus(msg){ document.getElementById('statusMessage').textContent=msg; }
+
+    // ---- 阵营 ----
+    function createFaction(x,y){
+        const color=FACTION_COLORS[factionIdCounter%FACTION_COLORS.length];
+        factionIdCounter++;
+        const f={id:factionIdCounter,color,cx:x,cy:y,humans:[],polygonPoints:[],atWar:false,warTargets:[],trespassCount:{},leader:null,level:1,hpBonus:0,atkBonus:0,remoteChance:0,population:0};
+        factions.push(f);
+        return f;
+    }
+    function getFactionById(id){ return factions.find(f=>f.id===id); }
+
+    function updateFactionPolygon(f){
+        const members=entities.filter(e=>e.alive&&e.factionId===f.id);
+        if(members.length<3){ f.polygonPoints=[]; return; }
+        f.polygonPoints=convexHull(members.map(e=>({x:e.x,y:e.y})));
+    }
+
+    function checkFactionUpgrade(f){
+        const pop=entities.filter(e=>e.alive&&e.factionId===f.id&&(e.type==='human'||e.type==='village')).length;
+        f.population=pop;
+        if(pop>=UPGRADE_THRESHOLD && f.level<2){
+            f.level=2; f.hpBonus+=3; f.atkBonus+=3; f.remoteChance=0.3;
+            setStatus(`⬆️ 阵营${f.id}升级 Lv2`);
+        } else if(pop>=UPGRADE_THRESHOLD*2 && f.level<3){
+            f.level=3; f.hpBonus+=3; f.atkBonus+=3; f.remoteChance=0.5;
+            setStatus(`⬆️ 阵营${f.id}升级 Lv3`);
+        }
+    }
+
+    function checkAndDeclareWar(fid, oid){
+        const f=getFactionById(fid), other=getFactionById(oid);
+        if(!f||!other||(f.atWar&&other.atWar)) return;
+        if(!f.trespassCount) f.trespassCount={};
+        if(!f.trespassCount[oid]) f.trespassCount[oid]=0;
+        f.trespassCount[oid]++;
+        if(!other.trespassCount) other.trespassCount={};
+        if(!other.trespassCount[fid]) other.trespassCount[fid]=0;
+        other.trespassCount[fid]++;
+        if(f.trespassCount[oid]>=WAR_THRESHOLD || other.trespassCount[fid]>=WAR_THRESHOLD){
+            f.atWar=true; other.atWar=true;
+            if(!f.warTargets) f.warTargets=[];
+            if(!other.warTargets) other.warTargets=[];
+            if(!f.warTargets.includes(oid)) f.warTargets.push(oid);
+            if(!other.warTargets.includes(fid)) other.warTargets.push(fid);
+            setStatus(`⚔️ 阵营${fid}与${oid}开战！`);
+            updateUI();
+        }
+    }
+
+    function spawnLeader(f,x,y){
+        const leader={x,y,type:'leader',factionId:f.id,alive:true,hp:150,maxHp:150,age:0,attackCooldown:0,radius:14,isLeader:true};
+        entities.push(leader);
+        f.leader=leader;
+        f.humans.push(leader);
+        return leader;
+    }
+
+    // ---- 生成实体 ----
+    function spawnEntity(type,x,y,factionId=null){
+        if(type==='human'||type==='village') civilizationStarted=true;
+
+        if(type==='village'){
+            if(!isNearSpring(x,y)){ setStatus('❌ 村庄必须靠近泉水！'); return; }
+            let targetFid=factionId;
+            if(targetFid===null){
+                const near=getNearestSpring(x,y);
+                if(near && near.ownerId!==null) targetFid=near.ownerId;
+            }
+            if(targetFid===null){
+                let hasNeutral=false;
+                for(let s of springs) if(dist(s,{x,y})<SPRING_RADIUS && s.ownerId===null){ hasNeutral=true; break; }
+                if(!hasNeutral){ setStatus('❌ 无中立泉水'); return; }
+                const f=createFaction(x,y);
+                targetFid=f.id;
+                claimSpring(x,y,targetFid);
+                const village={x,y,type:'village',age:0,alive:true,hp:200,maxHp:200,radius:20,factionId:targetFid};
+                entities.push(village); f.humans.push(village);
+                spawnLeader(f,x+15,y-15);
+                for(let i=0;i<4;i++){
+                    const hx=x+(Math.random()-0.5)*50, hy=y+(Math.random()-0.5)*50;
+                    entities.push({x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0});
+                    f.humans.push(entities[entities.length-1]);
                 }
-            }
-            return true;
-        }
-
-        function claimSpring(x, y, factionId) {
-            for (let s of springs) {
-                const dx = s.x - x, dy = s.y - y;
-                if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS && s.ownerId === null) {
-                    s.ownerId = factionId;
-                }
-            }
-        }
-
-        function getNearestSpring(x, y) {
-            let nearest = null, minDist = Infinity;
-            for (let s of springs) {
-                const dx = s.x - x, dy = s.y - y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < minDist) { minDist = dist; nearest = s; }
-            }
-            return nearest;
-        }
-
-        function autoClaimSpringsByTerritory(faction) {
-            const radius = faction.radius;
-            const cx = faction.cx, cy = faction.cy;
-            for (let s of springs) {
-                if (s.ownerId !== null) continue;
-                const dx = s.x - cx, dy = s.y - cy;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist <= radius) {
-                    s.ownerId = faction.id;
-                    setStatus(`⛲ 领土扩张，占据了一处中立泉水！`);
-                }
-            }
-        }
-
-        const FACTION_COLORS = ['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad', '#16a085', '#d35400', '#e74c8b', '#2c3e50', '#7f8c8d'];
-        let factionIdCounter = 0;
-
-        let day = 0, dayTimer = 0;
-        const DAY_INTERVAL = 60;
-        let entities = [], disasters = [], particles = [];
-        let factions = [];
-        let selectedTool = 'human';
-        let civilizationStarted = false;
-        let deathStreak = 0;
-        const DEATH_THRESHOLD = 5;
-        let isApocalypse = false;
-
-        const STORAGE_KEY = 'god_sandbox_rank';
-        function loadRank() { try { const d = localStorage.getItem(STORAGE_KEY); return d ? JSON.parse(d) : []; } catch(e) { return []; } }
-        function saveRank(r) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
-        function addRank(days) { if (days <= 0) return; let r = loadRank(); r.push(days); r.sort((a,b)=>b-a); if (r.length>10) r=r.slice(0,10); saveRank(r); renderRank(); }
-        function clearRank() { saveRank([]); renderRank(); }
-        function renderRank() {
-            const list = document.getElementById('rankList');
-            const rank = loadRank();
-            if (rank.length === 0) { list.innerHTML = '<span class="empty-rank">暂无记录</span>'; return; }
-            list.innerHTML = rank.map((d, i) => `<span class="rank-item"><span class="pos">#${i+1}</span><span class="days">${d}</span> 天</span>`).join('');
-        }
-        document.getElementById('clearRankBtn').addEventListener('click', clearRank);
-
-        function countType(type) { return entities.filter(e => e.type === type && e.alive).length; }
-        function updateUI() {
-            document.getElementById('dayDisplay').textContent = day;
-            document.getElementById('humanCount').textContent = countType('human');
-            document.getElementById('villageCount').textContent = countType('village');
-            document.getElementById('treeCount').textContent = countType('tree');
-            document.getElementById('animalCount').textContent = countType('animal');
-            document.getElementById('factionCount').textContent = factions.length;
-            const claimed = springs.filter(s => s.ownerId !== null).length;
-            document.getElementById('springCount').textContent = `${claimed}/${SPRING_COUNT}`;
-        }
-        function setStatus(msg) { document.getElementById('statusMessage').textContent = msg; }
-
-        function createFaction(x, y) {
-            const color = FACTION_COLORS[factionIdCounter % FACTION_COLORS.length];
-            factionIdCounter++;
-            const faction = { id: factionIdCounter, color: color, cx: x, cy: y, radius: 30, humans: [] };
-            factions.push(faction);
-            return faction;
-        }
-
-        function getFactionById(id) { return factions.find(f => f.id === id); }
-
-        function expandFactionTerritory(faction) {
-            const humans = entities.filter(e => e.type === 'human' && e.alive && e.factionId === faction.id);
-            if (humans.length === 0) return;
-            let maxDist = 0;
-            humans.forEach(h => {
-                const dx = h.x - faction.cx, dy = h.y - faction.cy;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist > maxDist) maxDist = dist;
-            });
-            if (maxDist <= faction.radius) return;
-            let newRadius = faction.radius + EXPAND_SPEED;
-            let collides = false;
-            for (let other of factions) {
-                if (other.id === faction.id) continue;
-                const dx = faction.cx - other.cx, dy = faction.cy - other.cy;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (newRadius + other.radius > dist) { collides = true; break; }
-            }
-            if (!collides) {
-                faction.radius = newRadius;
-                // 扩张后检查是否覆盖中立泉水
-                autoClaimSpringsByTerritory(faction);
-            }
-        }
-
-        function spawnEntity(type, x, y, factionId = null) {
-            if (type === 'human' || type === 'village') civilizationStarted = true;
-
-            if (type === 'village') {
-                if (!isNearSpring(x, y)) {
-                    setStatus('❌ 村庄必须靠近泉水！');
-                    return;
-                }
-                let targetFactionId = factionId;
-                if (targetFactionId === null) {
-                    const nearest = getNearestSpring(x, y);
-                    if (nearest && nearest.ownerId !== null) {
-                        targetFactionId = nearest.ownerId;
-                    }
-                }
-                if (targetFactionId === null) {
-                    let hasNeutral = false;
-                    for (let s of springs) {
-                        const dx = s.x - x, dy = s.y - y;
-                        if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS && s.ownerId === null) {
-                            hasNeutral = true; break;
-                        }
-                    }
-                    if (!hasNeutral) {
-                        setStatus('❌ 该区域没有可用的中立泉水！');
-                        return;
-                    }
-                    const faction = createFaction(x, y);
-                    targetFactionId = faction.id;
-                    claimSpring(x, y, targetFactionId);
-                    const village = { x, y, type: 'village', age: 0, alive: true, hp: 200, radius: 20, factionId: targetFactionId };
-                    entities.push(village);
-                    faction.humans.push(village);
-                    setStatus(`🏡 新阵营诞生！占领了泉水！`);
-                    updateUI();
-                    return;
-                }
-                if (!canClaimSpring(x, y, targetFactionId)) {
-                    setStatus('❌ 该泉水已被其他阵营占领！');
-                    return;
-                }
-                const faction = getFactionById(targetFactionId);
-                if (!faction) { setStatus('❌ 阵营不存在'); return; }
-                claimSpring(x, y, targetFactionId);
-                const village = { x, y, type: 'village', age: 0, alive: true, hp: 200, radius: 20, factionId: targetFactionId };
-                entities.push(village);
-                faction.humans.push(village);
-                setStatus(`🏡 村庄建立！`);
+                const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
+                if(cv>villagePeak) villagePeak=cv;
+                updateFactionPolygon(f);
+                checkFactionUpgrade(f);
+                setStatus('🏡 新阵营！头领+4人');
                 updateUI();
                 return;
             }
-
-            if (type === 'human') {
-                let targetFaction = null;
-                if (factionId !== null) {
-                    targetFaction = getFactionById(factionId);
-                } else {
-                    for (let f of factions) {
-                        const dx = x - f.cx, dy = y - f.cy;
-                        if (Math.sqrt(dx*dx + dy*dy) < f.radius) {
-                            targetFaction = f;
-                            break;
-                        }
-                    }
-                }
-                if (targetFaction) {
-                    const human = { x, y, type: 'human', age: 0, alive: true, hp: 100, vx: 0, vy: 0, moveTimer: 0, factionId: targetFaction.id };
-                    entities.push(human);
-                    targetFaction.humans.push(human);
-                } else {
-                    const human = { x, y, type: 'human', age: 0, alive: true, hp: 100, vx: 0, vy: 0, moveTimer: 0, factionId: null };
-                    entities.push(human);
-                }
-                updateUI();
-                return;
+            if(!canClaimSpring(x,y,targetFid)){ setStatus('❌ 泉水被占'); return; }
+            const f=getFactionById(targetFid);
+            if(!f){ setStatus('❌ 阵营不存在'); return; }
+            claimSpring(x,y,targetFid);
+            const village={x,y,type:'village',age:0,alive:true,hp:200,maxHp:200,radius:20,factionId:targetFid};
+            entities.push(village); f.humans.push(village);
+            if(!f.leader||!f.leader.alive) spawnLeader(f,x+15,y-15);
+            for(let i=0;i<4;i++){
+                const hx=x+(Math.random()-0.5)*50, hy=y+(Math.random()-0.5)*50;
+                const isRemoteNew=Math.random()<f.remoteChance;
+                entities.push({x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0});
+                f.humans.push(entities[entities.length-1]);
             }
+            const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
+            if(cv>villagePeak) villagePeak=cv;
+            updateFactionPolygon(f);
+            checkFactionUpgrade(f);
+            setStatus('🏡 村庄建立！+4人');
+            updateUI();
+            return;
+        }
 
-            switch(type) {
-                case 'tree': entities.push({ x, y, type: 'tree', age: 0, alive: true, hp: 60, radius: 14 }); break;
-                case 'animal': entities.push({ x, y, type: 'animal', age: 0, alive: true, hp: 70, vx: 0, vy: 0, moveTimer: 0 }); break;
-                default: break;
+        if(type==='human'){
+            let target=null;
+            if(factionId!==null) target=getFactionById(factionId);
+            else {
+                for(let f of factions){
+                    if(f.polygonPoints.length>=3 && pointInPolygon(x,y,f.polygonPoints)){ target=f; break; }
+                }
+            }
+            if(target){
+                const isRemoteNew=Math.random()<target.remoteChance;
+                entities.push({x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:target.id,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0});
+                target.humans.push(entities[entities.length-1]);
+                updateFactionPolygon(target);
+                checkFactionUpgrade(target);
+            } else {
+                entities.push({x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:null,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0});
             }
             updateUI();
+            return;
         }
 
-        function autoFormVillages() {
-            const humans = entities.filter(e => e.type === 'human' && e.alive && e.factionId === null);
-            if (humans.length < 3) return;
+        if(type==='tree') entities.push({x,y,type:'tree',age:0,alive:true,hp:60,radius:14});
+        else if(type==='animal') entities.push({x,y,type:'animal',age:0,alive:true,hp:70,vx:0,vy:0,moveTimer:0});
+        updateUI();
+    }
 
-            const GRID_SIZE = 80;
-            const grid = {};
-            humans.forEach(h => {
-                const gx = Math.floor(h.x / GRID_SIZE);
-                const gy = Math.floor(h.y / GRID_SIZE);
-                const key = gx + ',' + gy;
-                if (!grid[key]) grid[key] = [];
-                grid[key].push(h);
-            });
-
-            for (let key in grid) {
-                const [gx, gy] = key.split(',').map(Number);
-                const humanList = grid[key];
-                if (humanList.length >= 3) {
-                    const cx = gx * GRID_SIZE + GRID_SIZE/2;
-                    const cy = gy * GRID_SIZE + GRID_SIZE/2;
-                    if (!isNearSpring(cx, cy)) continue;
-
-                    let hasNeutralSpring = false;
-                    for (let s of springs) {
-                        const dx = s.x - cx, dy = s.y - cy;
-                        if (Math.sqrt(dx*dx + dy*dy) < SPRING_RADIUS && s.ownerId === null) {
-                            hasNeutralSpring = true; break;
-                        }
-                    }
-                    if (!hasNeutralSpring) continue;
-
-                    const hasVillage = entities.some(e => {
-                        if (e.type !== 'village' || !e.alive) return false;
-                        const dx = e.x - cx, dy = e.y - cy;
-                        return Math.sqrt(dx*dx + dy*dy) < GRID_SIZE;
-                    });
-                    if (!hasVillage) {
-                        const nearest = getNearestSpring(cx, cy);
-                        if (nearest && nearest.ownerId === null) {
-                            const faction = createFaction(cx, cy);
-                            claimSpring(cx, cy, faction.id);
-                            const village = { x: cx, y: cy, type: 'village', age: 0, alive: true, hp: 200, radius: 20, factionId: faction.id };
-                            entities.push(village);
-                            faction.humans.push(village);
-                            humanList.forEach(h => {
-                                h.factionId = faction.id;
-                                faction.humans.push(h);
-                            });
-                            setStatus(`🏡 人群聚集，占领泉水形成新阵营！`);
-                        }
-                    }
-                }
-            }
-        }
-
-        function spawnDisaster(type, cx, cy) {
-            const radius = type === 'nuke' ? 90 : (type === 'asteroid' ? 50 : 40);
-            const damage = type === 'nuke' ? 180 : (type === 'asteroid' ? 70 : 50);
-            const effectRadius = type === 'nuke' ? 140 : (type === 'asteroid' ? 110 : 90);
-            for (let i = 0; i < (type === 'nuke' ? 100 : 50); i++) {
-                const angle = Math.random() * 2 * Math.PI;
-                const speed = 1 + Math.random() * (type === 'nuke' ? 7 : 4);
-                particles.push({ x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life: 30+Math.random()*30, maxLife: 60, color: type==='nuke'?'#e86a5f':'#f5c842' });
-            }
-            entities.forEach(e => {
-                const dx = e.x - cx, dy = e.y - cy;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < effectRadius) {
-                    const factor = 1 - dist / effectRadius;
-                    e.hp -= damage * factor * 0.8 + 10;
-                    if (e.hp <= 0) e.alive = false;
-                }
-            });
-            entities = entities.filter(e => e.alive);
-            factions.forEach(f => { f.humans = f.humans.filter(h => entities.includes(h)); });
-            factions = factions.filter(f => f.humans.length > 0);
-            disasters.push({ x: cx, y: cy, radius: effectRadius, life: 90, type: 'crater' });
-            updateUI();
-            setStatus(`💥 ${type} 爆炸！半径 ${Math.round(effectRadius)}`);
-        }
-
-        function resetWorld() {
-            entities = []; disasters = []; particles = [];
-            factions = []; factionIdCounter = 0;
-            generateSprings();
-            day = 0; dayTimer = 0;
-            civilizationStarted = false; deathStreak = 0; isApocalypse = false;
-            updateUI(); setStatus('🔄 世界已重置');
-        }
-
-        document.querySelectorAll('[data-tool]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const tool = e.currentTarget.dataset.tool;
-                if (tool === 'reset') { resetWorld(); return; }
-                selectedTool = tool;
-                setStatus(`🔧 当前工具: ${tool}`);
-            });
+    // ---- 自动形成村庄 ----
+    function autoFormVillages(){
+        const humans=entities.filter(e=>e.type==='human'&&e.alive&&e.factionId===null);
+        if(humans.length<3) return;
+        const grid={};
+        humans.forEach(h=>{
+            const gx=Math.floor(h.x/80), gy=Math.floor(h.y/80);
+            const key=gx+','+gy;
+            if(!grid[key]) grid[key]=[];
+            grid[key].push(h);
         });
-
-        canvas.addEventListener('click', (e) => {
-            if (isApocalypse) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = W / rect.width, scaleY = H / rect.height;
-            const x = (e.clientX - rect.left) * scaleX;
-            const y = (e.clientY - rect.top) * scaleY;
-            if (x < 0 || x > W || y < 0 || y > H) return;
-
-            if (selectedTool === 'human') spawnEntity('human', x, y);
-            else if (selectedTool === 'village') spawnEntity('village', x, y);
-            else if (selectedTool === 'tree') spawnEntity('tree', x, y);
-            else if (selectedTool === 'animal') spawnEntity('animal', x, y);
-            else if (selectedTool === 'meteor') spawnDisaster('meteor', x, y);
-            else if (selectedTool === 'nuke') spawnDisaster('nuke', x, y);
-            else if (selectedTool === 'asteroid') {
-                for (let i = 0; i < 5 + Math.floor(Math.random() * 4); i++) {
-                    const ox = x + (Math.random() - 0.5) * 200;
-                    const oy = y + (Math.random() - 0.5) * 200;
-                    setTimeout(() => { spawnDisaster('asteroid', Math.max(15, Math.min(W-15, ox)), Math.max(15, Math.min(H-15, oy))); }, i*180);
+        for(let key in grid){
+            const [gx,gy]=key.split(',').map(Number);
+            const list=grid[key];
+            if(list.length>=3){
+                const cx=gx*80+40, cy=gy*80+40;
+                if(!isNearSpring(cx,cy)) continue;
+                let hasNeutral=false;
+                for(let s of springs) if(dist(s,{x:cx,y:cy})<SPRING_RADIUS && s.ownerId===null){ hasNeutral=true; break; }
+                if(!hasNeutral) continue;
+                const hasVillage=entities.some(e=>e.type==='village'&&e.alive&&dist(e,{x:cx,y:cy})<80);
+                if(!hasVillage){
+                    const near=getNearestSpring(cx,cy);
+                    if(near && near.ownerId===null){
+                        const f=createFaction(cx,cy);
+                        claimSpring(cx,cy,f.id);
+                        const village={x:cx,y:cy,type:'village',age:0,alive:true,hp:200,maxHp:200,radius:20,factionId:f.id};
+                        entities.push(village); f.humans.push(village);
+                        spawnLeader(f,cx+15,cy-15);
+                        for(let i=0;i<4;i++){
+                            const hx=cx+(Math.random()-0.5)*50, hy=cy+(Math.random()-0.5)*50;
+                            entities.push({x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:f.id,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0});
+                            f.humans.push(entities[entities.length-1]);
+                        }
+                        list.forEach(h=>{ h.factionId=f.id; f.humans.push(h); });
+                        const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
+                        if(cv>villagePeak) villagePeak=cv;
+                        updateFactionPolygon(f);
+                        checkFactionUpgrade(f);
+                        setStatus('🏡 人群聚集，形成新阵营！');
+                    }
                 }
-                setStatus('🌠 流星雨来袭！');
+            }
+        }
+    }
+
+    // ---- 灾难 ----
+    function spawnDisaster(type,cx,cy){
+        const rad=type==='nuke'?90:(type==='asteroid'?50:40);
+        const base=type==='nuke'?180:(type==='asteroid'?70:50);
+        const damage=base*1.5;
+        const effectRad=type==='nuke'?160:(type==='asteroid'?130:110);
+        const count=type==='nuke'?120:60;
+        for(let i=0;i<count;i++){
+            const a=Math.random()*2*Math.PI, sp=1+Math.random()*(type==='nuke'?8:5);
+            particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:30+Math.random()*30,maxLife:60,color:type==='nuke'?'#e86a5f':'#f5c842'});
+        }
+        entities.forEach(e=>{
+            const d=dist(e,{x:cx,y:cy});
+            if(d<effectRad){
+                const factor=1-d/effectRad;
+                e.hp-=damage*factor*0.8+15;
+                if(e.hp<=0) e.alive=false;
             }
         });
+        entities=entities.filter(e=>e.alive);
+        factions.forEach(f=>{ f.humans=f.humans.filter(h=>entities.includes(h)); updateFactionPolygon(f); });
+        factions=factions.filter(f=>f.humans.length>0);
+        disasters.push({x:cx,y:cy,radius:effectRad,life:90,type:'crater'});
+        updateUI();
+        setStatus(`💥 ${type} 爆炸！`);
+    }
 
-        function update() {
-            if (isApocalypse) return;
-
-            dayTimer += 1/60;
-            if (dayTimer >= DAY_INTERVAL) {
-                dayTimer = 0; day++;
-                if (civilizationStarted) {
-                    factions.forEach(f => {
-                        const fHumans = entities.filter(e => e.type === 'human' && e.alive && e.factionId === f.id);
-                        if (fHumans.length > 0 && Math.random() < 0.12) {
-                            const h = fHumans[Math.floor(Math.random() * fHumans.length)];
-                            spawnEntity('human', h.x + (Math.random()-0.5)*50, h.y + (Math.random()-0.5)*50, f.id);
-                        }
-                        const villages = entities.filter(e => e.type === 'village' && e.alive && e.factionId === f.id);
-                        villages.forEach(v => {
-                            if (Math.random() < 0.08) {
-                                spawnEntity('human', v.x + (Math.random()-0.5)*60, v.y + (Math.random()-0.5)*60, f.id);
-                            }
-                        });
-                    });
-                    const animals = entities.filter(e => e.type === 'animal' && e.alive);
-                    if (animals.length > 1 && Math.random() < 0.10) {
-                        const a = animals[Math.floor(Math.random() * animals.length)];
-                        spawnEntity('animal', a.x + (Math.random()-0.5)*40, a.y + (Math.random()-0.5)*40);
-                    }
-                    const trees = entities.filter(e => e.type === 'tree' && e.alive);
-                    if (trees.length > 0 && Math.random() < 0.06) {
-                        const t = trees[Math.floor(Math.random() * trees.length)];
-                        spawnEntity('tree', t.x + (Math.random()-0.5)*60, t.y + (Math.random()-0.5)*60);
-                    }
-                }
-                if (civilizationStarted && day > 5) {
-                    if (Math.random() < 0.05) {
-                        const rx = 40 + Math.random() * (W - 80);
-                        const ry = 40 + Math.random() * (H - 80);
-                        spawnDisaster('meteor', rx, ry);
-                    }
-                    if (day > 15 && Math.random() < 0.025) {
-                        const rx = 40 + Math.random() * (W - 80);
-                        const ry = 40 + Math.random() * (H - 80);
-                        spawnDisaster('asteroid', rx, ry);
-                    }
-                }
-                updateUI();
-                setStatus(`📆 第 ${day} 天`);
-            }
-
-            if (Math.floor(dayTimer * 60) % 4 === 0) {
-                autoFormVillages();
-            }
-
-            factions.forEach(f => expandFactionTerritory(f));
-
-            particles = particles.filter(p => { p.x += p.vx; p.y += p.vy; p.vx *= 0.98; p.vy *= 0.98; p.life--; return p.life > 0; });
-            disasters = disasters.filter(d => { d.life--; return d.life > 0; });
-
-            entities.forEach(e => {
-                if (!e.alive) return;
-                e.age++;
-                if (e.type === 'human') {
-                    e.moveTimer = (e.moveTimer || 0) + 1;
-                    if (e.moveTimer > 40 + Math.random() * 60) {
-                        e.moveTimer = 0;
-                        e.vx = (Math.random() - 0.5) * 1.0;
-                        e.vy = (Math.random() - 0.5) * 1.0;
-                    }
-                    e.x += (e.vx || 0); e.y += (e.vy || 0);
-                    e.x = Math.max(5, Math.min(W-5, e.x));
-                    e.y = Math.max(5, Math.min(H-5, e.y));
-                }
-                if (e.type === 'animal') {
-                    e.moveTimer = (e.moveTimer || 0) + 1;
-                    if (e.moveTimer > 20 + Math.random() * 40) {
-                        e.moveTimer = 0;
-                        e.vx = (Math.random() - 0.5) * 1.6;
-                        e.vy = (Math.random() - 0.5) * 1.6;
-                    }
-                    e.x += (e.vx || 0); e.y += (e.vy || 0);
-                    e.x = Math.max(5, Math.min(W-5, e.x));
-                    e.y = Math.max(5, Math.min(H-5, e.y));
-                }
-            });
-
-            entities = entities.filter(e => e.alive);
-            factions.forEach(f => { f.humans = f.humans.filter(h => entities.includes(h) && h.alive); });
-            factions = factions.filter(f => f.humans.length > 0);
-
-            if (civilizationStarted && !isApocalypse) {
-                const hc = countType('human'), vc = countType('village');
-                if ((hc <= 1 && vc === 0) || (hc === 0 && vc <= 1)) deathStreak += 1/60;
-                else { if (hc >= 2 || vc >= 2) deathStreak = Math.max(0, deathStreak - 0.3); }
-                if (deathStreak >= DEATH_THRESHOLD) {
-                    isApocalypse = true;
-                    addRank(day);
-                    setStatus(`💀 灭世！世界在 ${day} 天毁灭`);
-                }
-            } else { deathStreak = 0; }
-            updateUI();
-        }
-
-        function draw() {
-            ctx.fillStyle = '#c4a86a';
-            ctx.fillRect(0, 0, W, H);
-
-            ctx.strokeStyle = GRID_COLOR;
-            ctx.lineWidth = 1;
-            for (let i = 0; i < W; i += 50) {
-                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
-            }
-
-            springs.forEach(s => {
-                let color = '#6a9ec4';
-                let glowColor = 'rgba(100, 160, 200, 0.25)';
-                if (s.ownerId !== null) {
-                    const f = getFactionById(s.ownerId);
-                    if (f) {
-                        color = f.color;
-                        glowColor = color + '30';
-                    }
-                }
-
-                const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 70);
-                gradient.addColorStop(0, glowColor);
-                gradient.addColorStop(0.6, glowColor.replace('30', '15'));
-                gradient.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, 70, 0, 2*Math.PI);
-                ctx.fill();
-
-                ctx.shadowColor = color;
-                ctx.shadowBlur = 30;
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.radius, 0, 2*Math.PI);
-                ctx.fill();
-
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.beginPath();
-                ctx.arc(s.x - 4, s.y - 5, 5, 0, 2*Math.PI);
-                ctx.fill();
-
-                if (s.ownerId !== null) {
-                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                    ctx.font = '12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('⚑', s.x, s.y - 26);
-                }
-            });
-
-            factions.forEach(f => {
-                const gradient = ctx.createRadialGradient(f.cx, f.cy, 0, f.cx, f.cy, f.radius);
-                const color = f.color;
-                gradient.addColorStop(0, color + '35');
-                gradient.addColorStop(0.5, color + '20');
-                gradient.addColorStop(1, color + '05');
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(f.cx, f.cy, f.radius, 0, 2*Math.PI);
-                ctx.fill();
-
-                ctx.strokeStyle = color + '50';
-                ctx.lineWidth = 1.5;
-                ctx.setLineDash([8, 10]);
-                ctx.beginPath();
-                ctx.arc(f.cx, f.cy, f.radius, 0, 2*Math.PI);
-                ctx.stroke();
-                ctx.setLineDash([]);
-
-                ctx.fillStyle = color;
-                ctx.font = '14px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('⚑', f.cx, f.cy - f.radius - 8);
-            });
-
-            disasters.forEach(d => {
-                if (d.type === 'crater') {
-                    const alpha = d.life / 90 * 0.5;
-                    ctx.beginPath(); ctx.arc(d.x, d.y, d.radius, 0, 2*Math.PI);
-                    ctx.fillStyle = `rgba(50, 40, 25, ${alpha})`;
-                    ctx.fill();
-                    ctx.strokeStyle = `rgba(80, 65, 45, ${alpha*0.5})`;
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-            });
-
-            entities.forEach(e => {
-                if (!e.alive) return;
-                const x = e.x, y = e.y;
-
-                if (e.type === 'human') {
-                    let color = '#7a9ab5';
-                    if (e.factionId !== null) {
-                        const f = getFactionById(e.factionId);
-                        if (f) color = f.color;
-                    }
-                    ctx.beginPath(); ctx.arc(x, y, 8, 0, 2*Math.PI);
-                    ctx.fillStyle = color;
-                    ctx.shadowColor = color;
-                    ctx.shadowBlur = 14;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#e8ddd0';
-                    ctx.font = '12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('👤', x-6, y+5);
-                } else if (e.type === 'village') {
-                    const f = getFactionById(e.factionId);
-                    const color = f ? f.color : '#a07050';
-                    ctx.fillStyle = color;
-                    ctx.shadowColor = color;
-                    ctx.shadowBlur = 24;
-                    ctx.beginPath(); ctx.arc(x, y, 20, 0, 2*Math.PI);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#f0e8d8';
-                    ctx.font = '20px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('🏡', x-12, y+7);
-                } else if (e.type === 'tree') {
-                    ctx.fillStyle = '#5a8a5a';
-                    ctx.shadowColor = '#5a8a5a';
-                    ctx.shadowBlur = 12;
-                    ctx.beginPath(); ctx.arc(x, y, 12, 0, 2*Math.PI);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#2a2a1a';
-                    ctx.font = '12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('🌳', x-8, y+5);
-                } else if (e.type === 'animal') {
-                    ctx.fillStyle = '#c49a6a';
-                    ctx.shadowColor = '#c49a6a';
-                    ctx.shadowBlur = 10;
-                    ctx.beginPath(); ctx.arc(x, y, 10, 0, 2*Math.PI);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = '#e8ddd0';
-                    ctx.font = '14px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('🐾', x-7, y+6);
-                }
-            });
-
-            particles.forEach(p => {
-                const alpha = p.life / p.maxLife;
-                ctx.globalAlpha = alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 4 * alpha + 1, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            });
-
-            if (isApocalypse) {
-                ctx.fillStyle = 'rgba(20,15,10,0.65)';
-                ctx.fillRect(0,0,W,H);
-                ctx.fillStyle = '#e86a5f';
-                ctx.font = 'bold 48px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('💀 灭世', W/2, H/2 - 40);
-                ctx.fillStyle = '#d4c5a0';
-                ctx.font = '26px sans-serif';
-                ctx.fillText(`第 ${day} 天`, W/2, H/2 + 50);
-                ctx.fillStyle = '#7a6a50';
-                ctx.font = '18px sans-serif';
-                ctx.fillText('点击「重置」重新开始', W/2, H/2 + 110);
-            }
-            updateUI();
-        }
-
-        function loop() { update(); draw(); requestAnimationFrame(loop); }
-
+    function resetWorld(){
+        entities=[]; disasters=[]; particles=[];
+        factions=[]; factionIdCounter=0; villagePeak=0;
         generateSprings();
-        renderRank();
-        setStatus('⛲ 8个泉水，领土扩张会主动占据中立泉水');
-        loop();
-    })();
+        day=0; dayTimer=0;
+        civilizationStarted=false; deathStreak=0; isApocalypse=false;
+        updateUI(); setStatus('🔄 世界已重置');
+    }
+
+    // ---- 工具绑定 ----
+    document.querySelectorAll('[data-tool]').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+            const tool=e.currentTarget.dataset.tool;
+            if(tool==='reset'){ resetWorld(); return; }
+            selectedTool=tool;
+            setStatus(`🔧 ${tool}`);
+        });
+    });
+
+    canvas.addEventListener('click',(e)=>{
+        if(isApocalypse) return;
+        const rect=canvas.getBoundingClientRect();
+        const scaleX=W/rect.width, scaleY=H/rect.height;
+        const x=(e.clientX-rect.left)*scaleX, y=(e.clientY-rect.top)*scaleY;
+        if(x<0||x>W||y<0||y>H) return;
+        if(selectedTool==='human') spawnEntity('human',x,y);
+        else if(selectedTool==='village') spawnEntity('village',x,y);
+        else if(selectedTool==='tree') spawnEntity('tree',x,y);
+        else if(selectedTool==='animal') spawnEntity('animal',x,y);
+        else if(selectedTool==='meteor') spawnDisaster('meteor',x,y);
+        else if(selectedTool==='nuke') spawnDisaster('nuke',x,y);
+        else if(selectedTool==='asteroid'){
+            for(let i=0;i<5+Math.floor(Math.random()*4);i++){
+                const ox=x+(Math.random()-0.5)*200, oy=y+(Math.random()-0.5)*200;
+                setTimeout(()=>{ spawnDisaster('asteroid',Math.max(15,Math.min(W-15,ox)),Math.max(15,Math.min(H-15,oy))); },i*180);
+            }
+            setStatus('🌠 流星雨来袭！');
+        }
+    });
+
+    // ---- 攻击系统 ----
+    function processAttacks(){
+        const warring=factions.filter(f=>f.atWar);
+        if(warring.length===0) return;
+        for(let f of warring){
+            const targets=entities.filter(e=>e.alive&&e.factionId!==null&&e.factionId!==f.id&&(e.type==='human'||e.type==='leader'||e.type==='village'));
+            if(targets.length===0) continue;
+            const leaderTargets=targets.filter(e=>e.type==='leader');
+            const targetList=leaderTargets.length>0?leaderTargets:targets;
+            const attackers=entities.filter(e=>e.alive&&e.factionId===f.id&&(e.type==='human'||e.type==='leader'));
+            for(let a of attackers){
+                if(a.attackCooldown>0){ a.attackCooldown--; continue; }
+                let closest=null, minD=Infinity;
+                for(let t of targetList){
+                    const d=dist(a,t);
+                    const range=a.isRemote?80:20;
+                    if(d<range && d<minD){ minD=d; closest=t; }
+                }
+                if(!closest) continue;
+                let atk=10+(getFactionById(f.id)?.atkBonus||0);
+                if(getFactionById(f.id)?.atWar && a.type==='leader') atk*=1.15;
+                if(a.type==='leader') atk*=1.2;
+                closest.hp-=atk;
+                a.attackCooldown=15;
+                if(closest.hp<=0){
+                    closest.alive=false;
+                    if(closest.type==='leader'){
+                        const fd=getFactionById(closest.factionId);
+                        if(fd) fd.leader=null;
+                        setStatus('💀 头领阵亡！');
+                    }
+                }
+            }
+        }
+        entities=entities.filter(e=>e.alive);
+        factions.forEach(f=>{
+            f.humans=f.humans.filter(h=>entities.includes(h)&&h.alive);
+            if(f.leader && !entities.includes(f.leader)) f.leader=null;
+        });
+        factions=factions.filter(f=>f.humans.length>0);
+    }
+
+    // ---- 主循环 ----
+    function update(){
+        if(isApocalypse) return;
+
+        dayTimer += 1/60;
+        if(dayTimer >= DAY_INTERVAL){
+            dayTimer=0; day++;
+            if(civilizationStarted){
+                factions.forEach(f=>{
+                    const fh=entities.filter(e=>e.type==='human'&&e.alive&&e.factionId===f.id);
+                    if(fh.length>0 && Math.random()<0.12){
+                        const h=fh[Math.floor(Math.random()*fh.length)];
+                        spawnEntity('human', h.x+(Math.random()-0.5)*50, h.y+(Math.random()-0.5)*50, f.id);
+                    }
+                    entities.filter(e=>e.type==='village'&&e.alive&&e.factionId===f.id).forEach(v=>{
+                        if(Math.random()<0.08) spawnEntity('human', v.x+(Math.random()-0.5)*60, v.y+(Math.random()-0.5)*60, f.id);
+                    });
+                    updateFactionPolygon(f);
+                    checkFactionUpgrade(f);
+                });
+                const animals=entities.filter(e=>e.type==='animal'&&e.alive);
+                if(animals.length>1 && Math.random()<0.10){
+                    const a=animals[Math.floor(Math.random()*animals.length)];
+                    spawnEntity('animal', a.x+(Math.random()-0.5)*40, a.y+(Math.random()-0.5)*40);
+                }
+                const trees=entities.filter(e=>e.type==='tree'&&e.alive);
+                if(trees.length>0 && Math.random()<0.06){
+                    const t=trees[Math.floor(Math.random()*trees.length)];
+                    spawnEntity('tree', t.x+(Math.random()-0.5)*60, t.y+(Math.random()-0.5)*60);
+                }
+            }
+            if(civilizationStarted && day>5){
+                if(Math.random()<0.05){
+                    const rx=40+Math.random()*(W-80), ry=40+Math.random()*(H-80);
+                    spawnDisaster('meteor',rx,ry);
+                }
+                if(day>15 && Math.random()<0.025){
+                    const rx=40+Math.random()*(W-80), ry=40+Math.random()*(H-80);
+                    spawnDisaster('asteroid',rx,ry);
+                }
+            }
+            updateUI();
+            setStatus(`📆 第 ${day} 天`);
+        }
+
+        if(Math.floor(dayTimer*60)%4===0) autoFormVillages();
+
+        // 人类行为
+        entities.forEach(e=>{
+            if(!e.alive || e.type!=='human') return;
+            e.age++;
+            if(e.factionId===null){
+                e.restTimer=(e.restTimer||0)+1;
+                if(!e.targetX || !e.targetY || e.restTimer>60+Math.random()*80){
+                    e.restTimer=0;
+                    e.targetX=20+Math.random()*(W-40);
+                    e.targetY=20+Math.random()*(H-40);
+                    e.moveState='moving';
+                }
+                const dx=e.targetX-e.x, dy=e.targetY-e.y;
+                const d=Math.hypot(dx,dy);
+                if(d>2){ const sp=0.5+Math.random()*0.3; e.x+=dx/d*sp; e.y+=dy/d*sp; }
+                else { e.moveState='resting'; if(Math.random()<0.02){ e.targetX=20+Math.random()*(W-40); e.targetY=20+Math.random()*(H-40); } }
+                e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+                return;
+            }
+            const f=getFactionById(e.factionId);
+            if(!f) return;
+            const own=f.polygonPoints;
+            for(let other of factions){
+                if(other.id===f.id || other.polygonPoints.length<3) continue;
+                if(pointInPolygon(e.x,e.y,other.polygonPoints)) checkAndDeclareWar(f.id,other.id);
+            }
+            e.restTimer=(e.restTimer||0)+1;
+            if(!e.targetX || !e.targetY || e.restTimer>50+Math.random()*70){
+                e.restTimer=0;
+                if(own.length>=3){
+                    const idx=Math.floor(Math.random()*own.length);
+                    const p=own[idx];
+                    e.targetX=p.x+(Math.random()-0.5)*60;
+                    e.targetY=p.y+(Math.random()-0.5)*60;
+                } else {
+                    e.targetX=20+Math.random()*(W-40);
+                    e.targetY=20+Math.random()*(H-40);
+                }
+                e.targetX=Math.max(10,Math.min(W-10,e.targetX));
+                e.targetY=Math.max(10,Math.min(H-10,e.targetY));
+                e.moveState='moving';
+            }
+            const dx=e.targetX-e.x, dy=e.targetY-e.y;
+            const d=Math.hypot(dx,dy);
+            if(d>3){ const sp=0.4+Math.random()*0.3; e.x+=dx/d*sp; e.y+=dy/d*sp; e.moveState='moving'; }
+            else e.moveState='resting';
+            e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+        });
+
+        processAttacks();
+
+        factions.forEach(f=>{
+            updateFactionPolygon(f);
+            if(f.polygonPoints.length>=3) autoClaimSpringsByTerritory(f);
+        });
+
+        particles=particles.filter(p=>{ p.x+=p.vx; p.y+=p.vy; p.vx*=0.98; p.vy*=0.98; p.life--; return p.life>0; });
+        disasters=disasters.filter(d=>{ d.life--; return d.life>0; });
+
+        entities.forEach(e=>{
+            if(!e.alive || e.type!=='animal') return;
+            e.age++;
+            e.moveTimer=(e.moveTimer||0)+1;
+            if(e.moveTimer>20+Math.random()*40){ e.moveTimer=0; e.vx=(Math.random()-0.5)*1.6; e.vy=(Math.random()-0.5)*1.6; }
+            e.x+=e.vx||0; e.y+=e.vy||0;
+            e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
+        });
+
+        entities=entities.filter(e=>e.alive);
+        factions.forEach(f=>{
+            f.humans=f.humans.filter(h=>entities.includes(h)&&h.alive);
+            if(f.leader && !entities.includes(f.leader)) f.leader=null;
+            updateFactionPolygon(f);
+            checkFactionUpgrade(f);
+        });
+        factions=factions.filter(f=>f.humans.length>0);
+
+        if(civilizationStarted && !isApocalypse){
+            const hc=countType('human'), vc=countType('village');
+            if(villagePeak>=2){
+                if((hc<=1 && vc===0) || (hc===0 && vc<=1)) deathStreak+=1/60;
+                else { if(hc>=2 || vc>=2) deathStreak=Math.max(0,deathStreak-0.3); }
+                if(deathStreak>=DEATH_THRESHOLD){ isApocalypse=true; addRank(day); setStatus(`💀 OUT！${day}天终结`); }
+            } else deathStreak=0;
+        } else deathStreak=0;
+        updateUI();
+    }
+
+    function draw(){
+        ctx.fillStyle='#c4a86a';
+        ctx.fillRect(0,0,W,H);
+        ctx.strokeStyle=GRID_COLOR;
+        ctx.lineWidth=1;
+        for(let i=0;i<W;i+=50){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+
+        springs.forEach(s=>{
+            let color='#6a9ec4', glow='rgba(100,160,200,0.25)';
+            if(s.ownerId!==null){ const f=getFactionById(s.ownerId); if(f){ color=f.color; glow=color+'30'; } }
+            const g=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,70);
+            g.addColorStop(0,glow); g.addColorStop(0.6,glow.replace('30','15')); g.addColorStop(1,'rgba(0,0,0,0)');
+            ctx.fillStyle=g; ctx.beginPath(); ctx.arc(s.x,s.y,70,0,2*Math.PI); ctx.fill();
+            ctx.shadowColor=color; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(s.x,s.y,s.radius,0,2*Math.PI); ctx.fill();
+            ctx.shadowBlur=0; ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.arc(s.x-4,s.y-5,5,0,2*Math.PI); ctx.fill();
+            if(s.ownerId!==null){ ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText('⚑',s.x,s.y-26); }
+        });
+
+        const time=Date.now()/300;
+        factions.forEach(f=>{
+            const pts=f.polygonPoints;
+            if(pts.length<3) return;
+            const color=f.color;
+            let border=color+'80', lw=2;
+            if(f.atWar){ const flash=Math.sin(time)*0.5+0.5; border=`rgba(255,50,50,${0.5+flash*0.5})`; lw=3; }
+            ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+            for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+            ctx.closePath();
+            ctx.fillStyle=color+'25'; ctx.fill();
+            ctx.strokeStyle=border; ctx.lineWidth=lw; ctx.setLineDash(f.atWar?[6,4]:[]); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle=color+'60';
+            pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,3,0,2*Math.PI); ctx.fill(); });
+            let cx=0,cy=0; pts.forEach(p=>{ cx+=p.x; cy+=p.y; }); cx/=pts.length; cy/=pts.length;
+            ctx.fillStyle=color; ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.fillText(f.atWar?'⚔️':'⚑',cx,cy+5);
+            ctx.fillStyle='#f5c842'; ctx.font='12px sans-serif'; ctx.fillText(`Lv${f.level}`,cx,cy-20);
+        });
+
+        disasters.forEach(d=>{
+            if(d.type==='crater'){ const a=d.life/90*0.5; ctx.beginPath(); ctx.arc(d.x,d.y,d.radius,0,2*Math.PI); ctx.fillStyle=`rgba(50,40,25,${a})`; ctx.fill(); ctx.strokeStyle=`rgba(80,65,45,${a*0.5})`; ctx.lineWidth=2; ctx.stroke(); }
+        });
+
+        entities.forEach(e=>{
+            if(!e.alive) return;
+            const x=e.x, y=e.y;
+            if(e.type==='human'){
+                let color='#7a9ab5';
+                if(e.factionId!==null){ const f=getFactionById(e.factionId); if(f) color=f.color; }
+                ctx.beginPath(); ctx.arc(x,y,7,0,2*Math.PI);
+                ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=12; ctx.fill(); ctx.shadowBlur=0;
+                ctx.fillStyle='#e8ddd0'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+                const icon=e.isRemote?'🏹':(e.moveState==='resting'?'💤':'👤');
+                ctx.fillText(icon,x-6,y+5);
+            } else if(e.type==='leader'){
+                const f=getFactionById(e.factionId); const color=f?f.color:'#ffd700';
+                ctx.shadowColor='#ffd700'; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,16,0,2*Math.PI); ctx.fill();
+                ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x-10,y+8);
+                const hp=e.hp/e.maxHp;
+                ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-20,y-28,40,5);
+                ctx.fillStyle=hp>0.5?'#2ecc71':'#e74c3c'; ctx.fillRect(x-20,y-28,40*hp,5);
+            } else if(e.type==='village'){
+                const f=getFactionById(e.factionId); const color=f?f.color:'#a07050';
+                ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=24; ctx.beginPath(); ctx.arc(x,y,20,0,2*Math.PI); ctx.fill();
+                ctx.shadowBlur=0; ctx.fillStyle='#f0e8d8'; ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏡',x-12,y+7);
+            } else if(e.type==='tree'){
+                ctx.fillStyle='#5a8a5a'; ctx.shadowColor='#5a8a5a'; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(x,y,12,0,2*Math.PI); ctx.fill();
+                ctx.shadowBlur=0; ctx.fillStyle='#2a2a1a'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌳',x-8,y+5);
+            } else if(e.type==='animal'){
+                ctx.fillStyle='#c49a6a'; ctx.shadowColor='#c49a6a'; ctx.shadowBlur=10; ctx.beginPath(); ctx.arc(x,y,10,0,2*Math.PI); ctx.fill();
+                ctx.shadowBlur=0; ctx.fillStyle='#e8ddd0'; ctx.font='14px sans-serif'; ctx.textAlign='center'; ctx.fillText('🐾',x-7,y+6);
+            }
+        });
+
+        particles.forEach(p=>{
+            const a=p.life/p.maxLife;
+            ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,4*a+1,0,2*Math.PI); ctx.fill(); ctx.globalAlpha=1;
+        });
+
+        if(isApocalypse){
+            ctx.fillStyle='rgba(20,15,10,0.80)'; ctx.fillRect(0,0,W,H);
+            ctx.fillStyle='#ff4757'; ctx.font='bold 120px "Segoe UI",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('OUT',W/2,H/2-20);
+            ctx.fillStyle='#d4c5a0'; ctx.font='28px sans-serif'; ctx.fillText(`第 ${day} 天`,W/2,H/2+70);
+            ctx.fillStyle='#7a6a50'; ctx.font='18px sans-serif'; ctx.fillText('点击「重置」重新开始',W/2,H/2+120);
+        }
+        updateUI();
+    }
+
+    function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+    generateSprings();
+    renderRank();
+    setStatus('⛲ 1200x1200 · 头领 · 升级 · 战争');
+    loop();
+})();
 </script>
 </body>
 </html>
