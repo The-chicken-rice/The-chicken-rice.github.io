@@ -20,12 +20,12 @@
         }
         .container {
             background: #16213e;
-            padding: 20px 20px 30px;
+            padding: 16px 16px 24px;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
             text-align: center;
             width: 100%;
-            max-width: 460px;
+            max-width: 420px;
             margin: 10px;
         }
         .canvas-wrapper {
@@ -48,27 +48,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 16px 6px 0;
+            margin: 12px 4px 8px;
             color: #a0e8d8;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 500;
-            letter-spacing: 1px;
         }
         .score span {
             color: #f5c842;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 700;
         }
         button {
             background: #f5c842;
             border: none;
-            padding: 8px 24px;
+            padding: 6px 20px;
             border-radius: 40px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
             cursor: pointer;
-            transition: 0.2s;
             box-shadow: 0 4px 0 #b38f2e;
             touch-action: manipulation;
         }
@@ -76,11 +74,41 @@
             transform: translateY(4px);
             box-shadow: 0 2px 0 #b38f2e;
         }
-        .hint {
-            margin-top: 12px;
-            color: #5f7a8a;
-            font-size: 14px;
-            letter-spacing: 0.5px;
+        .dpad {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 4px;
+            justify-content: center;
+            margin: 12px auto 0;
+        }
+        .dpad button {
+            background: #2a3a5e;
+            border: none;
+            border-radius: 14px;
+            color: #a0e8d8;
+            font-size: 28px;
+            box-shadow: 0 4px 0 #0f1a2e;
+            padding: 0;
+            line-height: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        .dpad button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0f1a2e;
+        }
+        .dpad .empty {
+            background: transparent;
+            box-shadow: none;
+            cursor: default;
+        }
+        .dpad .empty:active {
+            transform: none;
+            box-shadow: none;
         }
         .start-overlay {
             position: absolute;
@@ -99,23 +127,31 @@
             touch-action: manipulation;
         }
         .start-overlay h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
+            font-size: 32px;
+            margin-bottom: 8px;
             color: #f5c842;
         }
         .start-overlay p {
-            font-size: 18px;
+            font-size: 16px;
             color: #a0e8d8;
             opacity: 0.8;
         }
+        .hint {
+            margin-top: 8px;
+            color: #5f7a8a;
+            font-size: 12px;
+        }
         @media (max-width: 480px) {
-            .container { padding: 12px 12px 20px; margin: 6px; }
-            .info { font-size: 15px; }
-            .score span { font-size: 22px; }
-            .start-overlay h1 { font-size: 28px; }
-            .start-overlay p { font-size: 15px; }
-            button { padding: 6px 18px; font-size: 14px; }
-            .hint { font-size: 12px; }
+            .container { padding: 10px 10px 16px; margin: 4px; }
+            .dpad { grid-template-columns: 52px 52px 52px; grid-template-rows: 52px 52px 52px; gap: 3px; }
+            .dpad button { font-size: 24px; border-radius: 12px; }
+            .info { font-size: 14px; }
+            .score span { font-size: 20px; }
+            .start-overlay h1 { font-size: 26px; }
+        }
+        @media (max-width: 380px) {
+            .dpad { grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; gap: 3px; }
+            .dpad button { font-size: 20px; }
         }
     </style>
 </head>
@@ -132,7 +168,15 @@
         <div class="score">🍎 <span id="scoreDisplay">0</span></div>
         <button id="restartBtn">🔄 重来</button>
     </div>
-    <div class="hint">⬆⬇⬅➡ 键盘 / 滑动屏幕控制</div>
+    <div class="dpad">
+        <div class="empty"></div>
+        <button id="btnUp">▲</button>
+        <div class="empty"></div>
+        <button id="btnLeft">◀</button>
+        <button id="btnDown">▼</button>
+        <button id="btnRight">▶</button>
+    </div>
+    <div class="hint">键盘方向键 / 点击方向按钮</div>
 </div>
 
 <script>
@@ -141,7 +185,6 @@
         const ctx = canvas.getContext('2d');
         const scoreSpan = document.getElementById('scoreDisplay');
         const startOverlay = document.getElementById('startOverlay');
-        const wrapper = document.getElementById('canvasWrapper');
 
         const GRID_SIZE = 20;
         const CELL_SIZE = 400 / GRID_SIZE;
@@ -156,9 +199,6 @@
         let paused = false;
         let started = false;
         let gameLoopInterval = null;
-
-        // 触摸滑动
-        let touchStartX = 0, touchStartY = 0;
 
         function initGame() {
             snake = [
@@ -375,37 +415,12 @@
             }
         }
 
-        // ===== 触摸控制 =====
-        function handleTouchStart(e) {
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-        }
+        // ===== 方向键控制 =====
+        document.getElementById('btnUp').addEventListener('click', () => { if (started && !gameOver) changeDirection('up'); });
+        document.getElementById('btnDown').addEventListener('click', () => { if (started && !gameOver) changeDirection('down'); });
+        document.getElementById('btnLeft').addEventListener('click', () => { if (started && !gameOver) changeDirection('left'); });
+        document.getElementById('btnRight').addEventListener('click', () => { if (started && !gameOver) changeDirection('right'); });
 
-        function handleTouchEnd(e) {
-            if (!started || gameOver) return;
-            if (touchStartX === 0 && touchStartY === 0) return;
-
-            const touchEnd = e.changedTouches[0];
-            const dx = touchEnd.clientX - touchStartX;
-            const dy = touchEnd.clientY - touchStartY;
-
-            const absDx = Math.abs(dx);
-            const absDy = Math.abs(dy);
-
-            if (Math.max(absDx, absDy) < 20) return; // 滑动太短忽略
-
-            if (absDx > absDy) {
-                changeDirection(dx > 0 ? 'right' : 'left');
-            } else {
-                changeDirection(dy > 0 ? 'down' : 'up');
-            }
-
-            touchStartX = 0;
-            touchStartY = 0;
-        }
-
-        // ===== 键盘控制 =====
         document.addEventListener('keydown', (e) => {
             const key = e.key;
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
@@ -426,10 +441,6 @@
                 draw();
             }
         });
-
-        // ===== 事件绑定 =====
-        canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-        canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
 
         startOverlay.addEventListener('click', startGame);
         startOverlay.addEventListener('touchstart', function(e) {
