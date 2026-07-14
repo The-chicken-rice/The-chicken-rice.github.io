@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文明 · 战争与山脉</title>
+    <title>文明 · 村庄扩张领域</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -38,7 +38,6 @@
         }
         canvas { display:block; width:100% !important; height:100% !important; touch-action:none; cursor:crosshair; }
 
-        /* 战争横幅 */
         #warBanner {
             position:absolute;
             top:12px;
@@ -50,12 +49,10 @@
             border-radius:40px;
             font-weight:700;
             font-size:22px;
-            letter-spacing:2px;
             z-index:20;
             display:none;
             animation:warFlash .5s infinite alternate;
             pointer-events:none;
-            text-shadow:0 0 20px rgba(255,0,0,0.5);
             border:2px solid #ff6b6b;
         }
         @keyframes warFlash {
@@ -170,7 +167,7 @@
         <button class="special" data-tool="asteroid">🌠 流星雨</button>
         <button class="special" data-tool="reset">🔄 重置</button>
     </div>
-    <div class="status-line" id="statusMessage">⛲ 山脉 · 路径领土 · 战争 · 首领</div>
+    <div class="status-line" id="statusMessage">⛲ 村庄为中心 · 路径扩张领域</div>
     <div class="rank-panel">
         <div class="title">🏆 存活时长榜</div>
         <div class="rank-list" id="rankList"><span class="empty-rank">暂无记录</span></div>
@@ -188,8 +185,8 @@
     const WAR_THRESHOLD = 3;
     const UPGRADE_THRESHOLD = 10;
     const GRID_COLOR = 'rgba(60,50,30,0.08)';
+    const VILLAGE_INITIAL_RADIUS = 80;
 
-    // ---- 工具 ----
     function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
     function cross(o,a,b){ return (a.x-o.x)*(b.y-o.y) - (a.y-o.y)*(b.x-o.x); }
     function convexHull(points){
@@ -209,6 +206,7 @@
         }
         return inside;
     }
+    function pointInCircle(px,py,cx,cy,r){ return Math.hypot(px-cx, py-cy) <= r; }
 
     // ---- 地形：山脉 ----
     let mountains = [];
@@ -288,7 +286,6 @@
     let isApocalypse=false;
     let villagePeak=0;
 
-    // ---- 排行榜 ----
     const STORAGE_KEY='god_sandbox_rank';
     function loadRank(){ try{ const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):[]; }catch(e){ return []; } }
     function saveRank(r){ localStorage.setItem(STORAGE_KEY,JSON.stringify(r)); }
@@ -312,7 +309,6 @@
         document.getElementById('factionCount').textContent=factions.length;
         const claimed=springs.filter(s=>s.ownerId!==null).length;
         document.getElementById('springCount').textContent=`${claimed}/${SPRING_COUNT}`;
-        // 战争横幅
         const atWar = factions.some(f=>f.atWar);
         document.getElementById('warBanner').style.display = atWar ? 'block' : 'none';
     }
@@ -324,10 +320,10 @@
         factionIdCounter++;
         const f={
             id:factionIdCounter, color,
-            cx:x, cy:y,
-            humans:[],
-            polygonPoints:[],
+            villages:[],
             footprints:[],
+            territoryPoints:[],
+            polygonPoints:[],
             atWar:false,
             warTargets:[],
             trespassCount:{},
@@ -343,26 +339,42 @@
     }
     function getFactionById(id){ return factions.find(f=>f.id===id); }
 
-    // ---- 基于路径的领土 ----
-    function updateFootprint(entity){
-        if(!entity.factionId) return;
-        const f=getFactionById(entity.factionId);
-        if(!f) return;
-        if(!entity.lastFP) entity.lastFP={x:entity.x, y:entity.y};
-        if(Math.hypot(entity.x-entity.lastFP.x, entity.y-entity.lastFP.y) > 18){
-            f.footprints.push({x:entity.x, y:entity.y});
-            entity.lastFP={x:entity.x, y:entity.y};
-            if(f.footprints.length > 1200) f.footprints.splice(0, 50);
+    function addVillageTerritory(f, vx, vy){
+        const radius = VILLAGE_INITIAL_RADIUS;
+        const points = [];
+        for(let i=0; i<36; i++){
+            const angle = (i/36) * Math.PI * 2;
+            points.push({x: vx + Math.cos(angle) * radius, y: vy + Math.sin(angle) * radius});
         }
+        f.territoryPoints.push(...points);
+        f.villages.push({x:vx, y:vy, radius:radius});
+        rebuildTerritory(f);
     }
 
-    function rebuildTerritory(faction){
-        if(faction.footprints.length < 5){ faction.polygonPoints=[]; return; }
-        const pts = faction.footprints.slice(-800);
-        faction.polygonPoints = convexHull(pts);
+    function addFootprintToTerritory(f, x, y){
+        f.footprints.push({x, y});
+        if(f.footprints.length > 2000) f.footprints.splice(0, 50);
+        if(f.footprints.length % 5 === 0) rebuildTerritory(f);
     }
 
-    // ---- 升级 ----
+    function rebuildTerritory(f){
+        const allPoints = [...f.territoryPoints];
+        if(f.footprints.length > 0){
+            const step = Math.max(1, Math.floor(f.footprints.length / 300));
+            for(let i=0; i<f.footprints.length; i+=step) allPoints.push(f.footprints[i]);
+        }
+        if(allPoints.length < 5){ f.polygonPoints = []; return; }
+        f.polygonPoints = convexHull(allPoints);
+    }
+
+    function isInFactionTerritory(f, x, y){
+        if(f.polygonPoints.length >= 3 && pointInPolygon(x, y, f.polygonPoints)) return true;
+        for(let v of f.villages){
+            if(pointInCircle(x, y, v.x, v.y, v.radius)) return true;
+        }
+        return false;
+    }
+
     function checkFactionUpgrade(f){
         const pop=entities.filter(e=>e.alive&&e.factionId===f.id&&(e.type==='human'||e.type==='village')).length;
         f.population=pop;
@@ -375,7 +387,6 @@
         }
     }
 
-    // ---- 战争 ----
     function checkAndDeclareWar(fid, oid){
         const f=getFactionById(fid), other=getFactionById(oid);
         if(!f||!other||(f.atWar&&other.atWar)) return;
@@ -391,11 +402,11 @@
             if(!other.warTargets) other.warTargets=[];
             if(!f.warTargets.includes(oid)) f.warTargets.push(oid);
             if(!other.warTargets.includes(fid)) other.warTargets.push(fid);
-            // 切换攻击模式
             entities.forEach(e=>{
                 if(e.type==='human' && (e.factionId===f.id || e.factionId===other.id)){
                     e.moveState='fighting';
                     e.targetX=null;
+                    e.restTimer=0;
                 }
             });
             setStatus(`⚔️ 阵营${fid}与${oid}开战！`);
@@ -406,15 +417,14 @@
     function endWar(winner, loser){
         winner.atWar=false;
         loser.atWar=false;
-        // 占据泉水
         springs.forEach(s=>{
             if(s.ownerId===loser.id) s.ownerId=winner.id;
         });
-        // 恢复游荡
         entities.forEach(e=>{
             if(e.type==='human' && (e.factionId===winner.id || e.factionId===loser.id)){
                 e.moveState='moving';
                 e.targetX=null;
+                e.restTimer=0;
             }
         });
         setStatus(`🏆 阵营${winner.id}获胜，占据所有泉水！`);
@@ -425,11 +435,9 @@
         const leader={x,y,type:'leader',factionId:f.id,alive:true,hp:150,maxHp:150,age:0,attackCooldown:0,radius:14,isLeader:true,lastHitTime:0};
         entities.push(leader);
         f.leader=leader;
-        f.humans.push(leader);
         return leader;
     }
 
-    // ---- 生成实体 ----
     function spawnEntity(type,x,y,factionId=null){
         if(type==='human'||type==='village') civilizationStarted=true;
 
@@ -449,18 +457,18 @@
                 targetFid=f.id;
                 claimSpring(x,y,targetFid);
                 const village={x,y,type:'village',age:0,alive:true,hp:200,maxHp:200,radius:20,factionId:targetFid};
-                entities.push(village); f.humans.push(village);
+                entities.push(village);
+                addVillageTerritory(f, x, y);
                 spawnLeader(f,x+15,y-15);
                 for(let i=0;i<4;i++){
                     const hx=x+(Math.random()-0.5)*50, hy=y+(Math.random()-0.5)*50;
                     const h={x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0,lastFP:null};
-                    entities.push(h); f.humans.push(h);
+                    entities.push(h);
                 }
                 const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
                 if(cv>villagePeak) villagePeak=cv;
-                rebuildTerritory(f);
                 checkFactionUpgrade(f);
-                setStatus('🏡 新阵营！头领+4人');
+                setStatus('🏡 新阵营！村庄领域+头领+4人');
                 updateUI();
                 return;
             }
@@ -469,19 +477,19 @@
             if(!f){ setStatus('❌ 阵营不存在'); return; }
             claimSpring(x,y,targetFid);
             const village={x,y,type:'village',age:0,alive:true,hp:200,maxHp:200,radius:20,factionId:targetFid};
-            entities.push(village); f.humans.push(village);
+            entities.push(village);
+            addVillageTerritory(f, x, y);
             if(!f.leader||!f.leader.alive) spawnLeader(f,x+15,y-15);
             for(let i=0;i<4;i++){
                 const hx=x+(Math.random()-0.5)*50, hy=y+(Math.random()-0.5)*50;
                 const isRemoteNew=Math.random()<f.remoteChance;
                 const h={x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:targetFid,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0,lastFP:null};
-                entities.push(h); f.humans.push(h);
+                entities.push(h);
             }
             const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
             if(cv>villagePeak) villagePeak=cv;
-            rebuildTerritory(f);
             checkFactionUpgrade(f);
-            setStatus('🏡 村庄建立！+4人');
+            setStatus('🏡 村庄建立！领域扩张+4人');
             updateUI();
             return;
         }
@@ -491,14 +499,13 @@
             if(factionId!==null) target=getFactionById(factionId);
             else {
                 for(let f of factions){
-                    if(f.polygonPoints.length>=3 && pointInPolygon(x,y,f.polygonPoints)){ target=f; break; }
+                    if(isInFactionTerritory(f, x, y)){ target=f; break; }
                 }
             }
             if(target){
                 const isRemoteNew=Math.random()<target.remoteChance;
                 const h={x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:target.id,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:isRemoteNew,attackCooldown:0,lastFP:null};
-                entities.push(h); target.humans.push(h);
-                rebuildTerritory(target);
+                entities.push(h);
                 checkFactionUpgrade(target);
             } else {
                 const h={x,y,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:null,vx:0,vy:0,moveTimer:0,targetX:x,targetY:y,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0,lastFP:null};
@@ -513,7 +520,6 @@
         updateUI();
     }
 
-    // ---- 自动形成村庄 ----
     function autoFormVillages(){
         const humans=entities.filter(e=>e.type==='human'&&e.alive&&e.factionId===null);
         if(humans.length<3) return;
@@ -541,17 +547,17 @@
                         const f=createFaction(cx,cy);
                         claimSpring(cx,cy,f.id);
                         const village={x:cx,y:cy,type:'village',age:0,alive:true,hp:200,maxHp:200,radius:20,factionId:f.id};
-                        entities.push(village); f.humans.push(village);
+                        entities.push(village);
+                        addVillageTerritory(f, cx, cy);
                         spawnLeader(f,cx+15,cy-15);
                         for(let i=0;i<4;i++){
                             const hx=cx+(Math.random()-0.5)*50, hy=cy+(Math.random()-0.5)*50;
                             const h={x:hx,y:hy,type:'human',age:0,alive:true,hp:100,maxHp:100,factionId:f.id,vx:0,vy:0,moveTimer:0,targetX:hx,targetY:hy,restTimer:0,moveState:'resting',isRemote:false,attackCooldown:0,lastFP:null};
-                            entities.push(h); f.humans.push(h);
+                            entities.push(h);
                         }
-                        list.forEach(h=>{ h.factionId=f.id; f.humans.push(h); });
+                        list.forEach(h=>{ h.factionId=f.id; });
                         const cv=entities.filter(e=>e.type==='village'&&e.alive).length;
                         if(cv>villagePeak) villagePeak=cv;
-                        rebuildTerritory(f);
                         checkFactionUpgrade(f);
                         setStatus('🏡 人群聚集，形成新阵营！');
                     }
@@ -560,10 +566,9 @@
         }
     }
 
-    // ---- 灾难（伤害提升） ----
     function spawnDisaster(type,cx,cy){
         const rad=type==='nuke'?90:(type==='asteroid'?50:40);
-        const base=type==='nuke'?220:(type==='asteroid'?90:65); // 提升
+        const base=type==='nuke'?220:(type==='asteroid'?90:65);
         const damage=base*1.5;
         const effectRad=type==='nuke'?170:(type==='asteroid'?140:120);
         const count=type==='nuke'?140:70;
@@ -581,8 +586,8 @@
             }
         });
         entities=entities.filter(e=>e.alive);
-        factions.forEach(f=>{ f.humans=f.humans.filter(h=>entities.includes(h)); rebuildTerritory(f); });
-        factions=factions.filter(f=>f.humans.length>0);
+        factions.forEach(f=>{ rebuildTerritory(f); });
+        factions=factions.filter(f=>f.villages.length>0 || f.footprints.length>0);
         disasters.push({x:cx,y:cy,radius:effectRad,life:90,type:'crater'});
         updateUI();
         setStatus(`💥 ${type} 爆炸！`);
@@ -599,7 +604,6 @@
         updateUI(); setStatus('🔄 世界已重置');
     }
 
-    // ---- 工具绑定 ----
     document.querySelectorAll('[data-tool]').forEach(btn=>{
         btn.addEventListener('click',(e)=>{
             const tool=e.currentTarget.dataset.tool;
@@ -630,14 +634,12 @@
         }
     });
 
-    // ---- 攻击系统 ----
     function processAttacks(){
         const warring=factions.filter(f=>f.atWar);
         if(warring.length===0) return;
         for(let f of warring){
             const targets=entities.filter(e=>e.alive&&e.factionId!==null&&e.factionId!==f.id&&(e.type==='human'||e.type==='leader'||e.type==='village'));
             if(targets.length===0){
-                // 胜利
                 const others=factions.filter(x=>x.id!==f.id);
                 for(let o of others){ if(o.atWar){ endWar(f, o); } }
                 continue;
@@ -672,11 +674,9 @@
         }
         entities=entities.filter(e=>e.alive);
         factions.forEach(f=>{
-            f.humans=f.humans.filter(h=>entities.includes(h)&&h.alive);
             if(f.leader && !entities.includes(f.leader)) f.leader=null;
         });
-        factions=factions.filter(f=>f.humans.length>0);
-        // 检查是否有阵营被灭
+        factions=factions.filter(f=>f.villages.length>0 || f.footprints.length>0);
         for(let f of factions){
             if(f.atWar){
                 const enemies=entities.filter(e=>e.alive&&e.factionId!==null&&e.factionId!==f.id);
@@ -735,120 +735,203 @@
 
         if(Math.floor(dayTimer*60)%4===0) autoFormVillages();
 
-        // ---- 人类行为 ----
-        entities.forEach(e=>{
-            if(!e.alive || e.type!=='human') return;
+        // ========== 人类行为（走直线 + 停顿1~3秒，战斗状态无停顿） ==========
+        entities.forEach(e => {
+            if (!e.alive || e.type !== 'human') return;
             e.age++;
 
-            // 战斗状态：追击敌人
-            if(e.factionId!==null){
-                const f=getFactionById(e.factionId);
-                if(f && f.atWar){
-                    e.moveState='fighting';
-                    // 找最近的敌人
-                    const enemies=entities.filter(en=>en.alive&&en.factionId!==null&&en.factionId!==e.factionId&&(en.type==='human'||en.type==='leader'));
-                    if(enemies.length>0){
-                        let nearest=null, nd=Infinity;
-                        for(let en of enemies){
-                            const d=dist(e,en);
-                            if(d<nd){ nd=d; nearest=en; }
+            // ---- 战斗状态：持续追击，无停顿 ----
+            if (e.factionId !== null) {
+                const f = getFactionById(e.factionId);
+                if (f && f.atWar) {
+                    e.moveState = 'fighting';
+                    const enemies = entities.filter(en =>
+                        en.alive && en.factionId !== null && en.factionId !== e.factionId &&
+                        (en.type === 'human' || en.type === 'leader')
+                    );
+                    if (enemies.length > 0) {
+                        let nearest = null, nd = Infinity;
+                        for (let en of enemies) {
+                            const d = dist(e, en);
+                            if (d < nd) { nd = d; nearest = en; }
                         }
-                        if(nearest && nd<200){
-                            e.targetX=nearest.x;
-                            e.targetY=nearest.y;
-                            const dx=e.targetX-e.x, dy=e.targetY-e.y;
-                            const d=Math.hypot(dx,dy);
-                            if(d>5){ const sp=0.6; e.x+=dx/d*sp; e.y+=dy/d*sp; }
-                            e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
-                            updateFootprint(e);
+                        if (nearest && nd < 200) {
+                            e.targetX = nearest.x;
+                            e.targetY = nearest.y;
+                            const dx = e.targetX - e.x, dy = e.targetY - e.y;
+                            const d = Math.hypot(dx, dy);
+                            if (d > 3) {
+                                const sp = 0.8;
+                                e.x += (dx / d) * sp;
+                                e.y += (dy / d) * sp;
+                            }
+                            e.x = Math.max(5, Math.min(W - 5, e.x));
+                            e.y = Math.max(5, Math.min(H - 5, e.y));
+                            const f2 = getFactionById(e.factionId);
+                            if (f2) addFootprintToTerritory(f2, e.x, e.y);
                             return;
                         }
                     }
+                    // 没有敌人时继续移动（但保持在战斗状态）
+                    if (e.targetX === undefined || e.targetX === null || Math.hypot(e.targetX - e.x, e.targetY - e.y) < 5) {
+                        const angle = Math.random() * Math.PI * 2;
+                        e.targetX = e.x + Math.cos(angle) * 100;
+                        e.targetY = e.y + Math.sin(angle) * 100;
+                        e.targetX = Math.max(10, Math.min(W - 10, e.targetX));
+                        e.targetY = Math.max(10, Math.min(H - 10, e.targetY));
+                    }
+                    const dx = e.targetX - e.x, dy = e.targetY - e.y;
+                    const d = Math.hypot(dx, dy);
+                    if (d > 3) {
+                        const sp = 0.7;
+                        e.x += (dx / d) * sp;
+                        e.y += (dy / d) * sp;
+                    }
+                    e.x = Math.max(5, Math.min(W - 5, e.x));
+                    e.y = Math.max(5, Math.min(H - 5, e.y));
+                    const f2 = getFactionById(e.factionId);
+                    if (f2) addFootprintToTerritory(f2, e.x, e.y);
+                    return;
                 }
             }
 
-            // 无阵营或和平游荡
-            if(e.factionId===null){
-                e.restTimer=(e.restTimer||0)+1;
-                if(!e.targetX || !e.targetY || e.restTimer>60+Math.random()*80){
-                    e.restTimer=0;
-                    e.targetX=20+Math.random()*(W-40);
-                    e.targetY=20+Math.random()*(H-40);
-                    // 避开山脉
-                    const avoid=avoidMountains(e, {x:e.targetX, y:e.targetY});
-                    e.targetX=avoid.x; e.targetY=avoid.y;
-                    e.moveState='moving';
+            // ---- 无阵营：自由游荡（直线 + 停顿1~3秒） ----
+            if (e.factionId === null) {
+                if (e.restTimer === undefined) e.restTimer = 0;
+                e.restTimer++;
+
+                // 到达目标点 → 休息
+                if (e.targetX !== undefined && e.targetY !== undefined) {
+                    const dx = e.targetX - e.x, dy = e.targetY - e.y;
+                    const d = Math.hypot(dx, dy);
+                    if (d < 5) {
+                        e.moveState = 'resting';
+                        if (e.restTimer > 60 + Math.random() * 120) { // 1~3秒
+                            e.restTimer = 0;
+                            e.targetX = 20 + Math.random() * (W - 40);
+                            e.targetY = 20 + Math.random() * (H - 40);
+                            const avoid = avoidMountains(e, { x: e.targetX, y: e.targetY });
+                            e.targetX = avoid.x;
+                            e.targetY = avoid.y;
+                            e.moveState = 'moving';
+                        }
+                        e.x += (Math.random() - 0.5) * 0.2;
+                        e.y += (Math.random() - 0.5) * 0.2;
+                        e.x = Math.max(5, Math.min(W - 5, e.x));
+                        e.y = Math.max(5, Math.min(H - 5, e.y));
+                        return;
+                    }
+                } else {
+                    e.targetX = 20 + Math.random() * (W - 40);
+                    e.targetY = 20 + Math.random() * (H - 40);
+                    const avoid = avoidMountains(e, { x: e.targetX, y: e.targetY });
+                    e.targetX = avoid.x;
+                    e.targetY = avoid.y;
+                    e.moveState = 'moving';
+                    e.restTimer = 0;
                 }
-                const dx=e.targetX-e.x, dy=e.targetY-e.y;
-                const d=Math.hypot(dx,dy);
-                if(d>2){ const sp=0.5+Math.random()*0.3; e.x+=dx/d*sp; e.y+=dy/d*sp; }
-                else { e.moveState='resting'; if(Math.random()<0.02){ e.targetX=20+Math.random()*(W-40); e.targetY=20+Math.random()*(H-40); } }
-                e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
-                updateFootprint(e);
+
+                // 直线走向目标
+                const dx = e.targetX - e.x, dy = e.targetY - e.y;
+                const d = Math.hypot(dx, dy);
+                if (d > 3) {
+                    const sp = 0.6 + Math.random() * 0.2;
+                    e.x += (dx / d) * sp;
+                    e.y += (dy / d) * sp;
+                    e.moveState = 'moving';
+                }
+                e.x = Math.max(5, Math.min(W - 5, e.x));
+                e.y = Math.max(5, Math.min(H - 5, e.y));
                 return;
             }
 
-            const f=getFactionById(e.factionId);
-            if(!f) return;
-            const own=f.polygonPoints;
-            // 检测入侵
-            for(let other of factions){
-                if(other.id===f.id || other.polygonPoints.length<3) continue;
-                if(pointInPolygon(e.x,e.y,other.polygonPoints)){
+            // ---- 有阵营：在领土内游荡（直线 + 停顿1~3秒） ----
+            const f = getFactionById(e.factionId);
+            if (!f) return;
+
+            // 入侵检测
+            for (let other of factions) {
+                if (other.id === f.id) continue;
+                if (isInFactionTerritory(other, e.x, e.y)) {
                     checkAndDeclareWar(f.id, other.id);
                 }
             }
 
-            if(f.atWar){
-                e.moveState='fighting';
-                const enemies=entities.filter(en=>en.alive&&en.factionId!==null&&en.factionId!==e.factionId&&(en.type==='human'||en.type==='leader'));
-                if(enemies.length>0){
-                    let nearest=null, nd=Infinity;
-                    for(let en of enemies){
-                        const d=dist(e,en);
-                        if(d<nd){ nd=d; nearest=en; }
+            if (f.atWar) return; // 战斗状态已在上面处理
+
+            if (e.restTimer === undefined) e.restTimer = 0;
+            e.restTimer++;
+
+            // 到达目标点 → 休息
+            if (e.targetX !== undefined && e.targetY !== undefined) {
+                const dx = e.targetX - e.x, dy = e.targetY - e.y;
+                const d = Math.hypot(dx, dy);
+                if (d < 5) {
+                    e.moveState = 'resting';
+                    if (e.restTimer > 60 + Math.random() * 120) { // 1~3秒
+                        e.restTimer = 0;
+                        if (f.polygonPoints.length >= 3) {
+                            const idx = Math.floor(Math.random() * f.polygonPoints.length);
+                            const p = f.polygonPoints[idx];
+                            e.targetX = p.x + (Math.random() - 0.5) * 100;
+                            e.targetY = p.y + (Math.random() - 0.5) * 100;
+                        } else if (f.villages.length > 0) {
+                            const v = f.villages[0];
+                            e.targetX = v.x + (Math.random() - 0.5) * 120;
+                            e.targetY = v.y + (Math.random() - 0.5) * 120;
+                        } else {
+                            e.targetX = 20 + Math.random() * (W - 40);
+                            e.targetY = 20 + Math.random() * (H - 40);
+                        }
+                        const avoid = avoidMountains(e, { x: e.targetX, y: e.targetY });
+                        e.targetX = avoid.x;
+                        e.targetY = avoid.y;
+                        e.targetX = Math.max(10, Math.min(W - 10, e.targetX));
+                        e.targetY = Math.max(10, Math.min(H - 10, e.targetY));
+                        e.moveState = 'moving';
                     }
-                    if(nearest && nd<250){
-                        e.targetX=nearest.x;
-                        e.targetY=nearest.y;
-                        const dx=e.targetX-e.x, dy=e.targetY-e.y;
-                        const d=Math.hypot(dx,dy);
-                        if(d>5){ const sp=0.6; e.x+=dx/d*sp; e.y+=dy/d*sp; }
-                        e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
-                        updateFootprint(e);
-                        return;
-                    }
+                    e.x += (Math.random() - 0.5) * 0.2;
+                    e.y += (Math.random() - 0.5) * 0.2;
+                    e.x = Math.max(5, Math.min(W - 5, e.x));
+                    e.y = Math.max(5, Math.min(H - 5, e.y));
+                    addFootprintToTerritory(f, e.x, e.y);
+                    return;
                 }
-                e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
-                updateFootprint(e);
-                return;
+            } else {
+                if (f.polygonPoints.length >= 3) {
+                    const idx = Math.floor(Math.random() * f.polygonPoints.length);
+                    const p = f.polygonPoints[idx];
+                    e.targetX = p.x + (Math.random() - 0.5) * 100;
+                    e.targetY = p.y + (Math.random() - 0.5) * 100;
+                } else if (f.villages.length > 0) {
+                    const v = f.villages[0];
+                    e.targetX = v.x + (Math.random() - 0.5) * 120;
+                    e.targetY = v.y + (Math.random() - 0.5) * 120;
+                } else {
+                    e.targetX = 20 + Math.random() * (W - 40);
+                    e.targetY = 20 + Math.random() * (H - 40);
+                }
+                const avoid = avoidMountains(e, { x: e.targetX, y: e.targetY });
+                e.targetX = avoid.x;
+                e.targetY = avoid.y;
+                e.targetX = Math.max(10, Math.min(W - 10, e.targetX));
+                e.targetY = Math.max(10, Math.min(H - 10, e.targetY));
+                e.moveState = 'moving';
+                e.restTimer = 0;
             }
 
-            // 和平游荡（有阵营）
-            e.restTimer=(e.restTimer||0)+1;
-            if(!e.targetX || !e.targetY || e.restTimer>50+Math.random()*70){
-                e.restTimer=0;
-                if(own.length>=3){
-                    const idx=Math.floor(Math.random()*own.length);
-                    const p=own[idx];
-                    e.targetX=p.x+(Math.random()-0.5)*80;
-                    e.targetY=p.y+(Math.random()-0.5)*80;
-                } else {
-                    e.targetX=20+Math.random()*(W-40);
-                    e.targetY=20+Math.random()*(H-40);
-                }
-                const avoid=avoidMountains(e, {x:e.targetX, y:e.targetY});
-                e.targetX=avoid.x; e.targetY=avoid.y;
-                e.targetX=Math.max(10,Math.min(W-10,e.targetX));
-                e.targetY=Math.max(10,Math.min(H-10,e.targetY));
-                e.moveState='moving';
+            // 直线走向目标
+            const dx = e.targetX - e.x, dy = e.targetY - e.y;
+            const d = Math.hypot(dx, dy);
+            if (d > 3) {
+                const sp = 0.5 + Math.random() * 0.3;
+                e.x += (dx / d) * sp;
+                e.y += (dy / d) * sp;
+                e.moveState = 'moving';
             }
-            const dx=e.targetX-e.x, dy=e.targetY-e.y;
-            const d=Math.hypot(dx,dy);
-            if(d>3){ const sp=0.4+Math.random()*0.3; e.x+=dx/d*sp; e.y+=dy/d*sp; e.moveState='moving'; }
-            else e.moveState='resting';
-            e.x=Math.max(5,Math.min(W-5,e.x)); e.y=Math.max(5,Math.min(H-5,e.y));
-            updateFootprint(e);
+            e.x = Math.max(5, Math.min(W - 5, e.x));
+            e.y = Math.max(5, Math.min(H - 5, e.y));
+            addFootprintToTerritory(f, e.x, e.y);
         });
 
         processAttacks();
@@ -871,14 +954,12 @@
 
         entities=entities.filter(e=>e.alive);
         factions.forEach(f=>{
-            f.humans=f.humans.filter(h=>entities.includes(h)&&h.alive);
             if(f.leader && !entities.includes(f.leader)) f.leader=null;
             rebuildTerritory(f);
             checkFactionUpgrade(f);
         });
-        factions=factions.filter(f=>f.humans.length>0);
+        factions=factions.filter(f=>f.villages.length>0 || f.footprints.length>0);
 
-        // ---- 灭世 ----
         if(civilizationStarted && !isApocalypse){
             const hc=countType('human'), vc=countType('village');
             if(villagePeak>=2){
@@ -890,17 +971,14 @@
         updateUI();
     }
 
-    // ---- 绘制 ----
     function draw(){
         ctx.fillStyle='#c4a86a';
         ctx.fillRect(0,0,W,H);
 
-        // 网格
         ctx.strokeStyle=GRID_COLOR;
         ctx.lineWidth=1;
         for(let i=0;i<W;i+=50){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
 
-        // ---- 山脉 ----
         for(let range of mountains){
             for(let p of range.points){
                 const r = range.width * 0.6;
@@ -912,7 +990,6 @@
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, r, 0, Math.PI*2);
                 ctx.fill();
-                // 阴影
                 ctx.fillStyle = 'rgba(0,0,0,0.15)';
                 ctx.beginPath();
                 ctx.arc(p.x+3, p.y+3, r*0.5, 0, Math.PI*2);
@@ -920,7 +997,6 @@
             }
         }
 
-        // ---- 泉水 ----
         springs.forEach(s=>{
             let color='#6a9ec4', glow='rgba(100,160,200,0.25)';
             if(s.ownerId!==null){ const f=getFactionById(s.ownerId); if(f){ color=f.color; glow=color+'30'; } }
@@ -932,38 +1008,47 @@
             if(s.ownerId!==null){ ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.fillText('⚑',s.x,s.y-26); }
         });
 
-        // ---- 领土 ----
         factions.forEach(f=>{
             const pts=f.polygonPoints;
             if(pts.length<3) return;
             const color=f.color;
             let border=color+'80', lw=2;
             if(f.atWar){ const flash=Math.sin(Date.now()/300)*0.5+0.5; border=`rgba(255,50,50,${0.5+flash*0.5})`; lw=3; }
+
             ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
             for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
             ctx.closePath();
             ctx.fillStyle=color+'20'; ctx.fill();
             ctx.strokeStyle=border; ctx.lineWidth=lw; ctx.setLineDash(f.atWar?[8,6]:[]); ctx.stroke(); ctx.setLineDash([]);
-            // 路径足迹点
+
+            for(let v of f.villages){
+                ctx.beginPath();
+                ctx.arc(v.x, v.y, VILLAGE_INITIAL_RADIUS, 0, Math.PI*2);
+                ctx.strokeStyle=color+'30';
+                ctx.lineWidth=1;
+                ctx.setLineDash([4,8]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
             if(f.footprints.length>0){
-                ctx.fillStyle=color+'40';
-                const step=Math.max(1, Math.floor(f.footprints.length/150));
+                ctx.fillStyle=color+'50';
+                const step=Math.max(1, Math.floor(f.footprints.length/200));
                 for(let i=0;i<f.footprints.length;i+=step){
                     const p=f.footprints[i];
-                    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2); ctx.fill();
                 }
             }
+
             let cx=0,cy=0; pts.forEach(p=>{ cx+=p.x; cy+=p.y; }); cx/=pts.length; cy/=pts.length;
             ctx.fillStyle=color; ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.fillText(f.atWar?'⚔️':'⚑',cx,cy+5);
             ctx.fillStyle='#f5c842'; ctx.font='13px sans-serif'; ctx.fillText(`Lv${f.level}`,cx,cy-22);
         });
 
-        // 陨石坑
         disasters.forEach(d=>{
             if(d.type==='crater'){ const a=d.life/90*0.5; ctx.beginPath(); ctx.arc(d.x,d.y,d.radius,0,Math.PI*2); ctx.fillStyle=`rgba(50,40,25,${a})`; ctx.fill(); ctx.strokeStyle=`rgba(80,65,45,${a*0.5})`; ctx.lineWidth=2; ctx.stroke(); }
         });
 
-        // ---- 实体 ----
         const now=Date.now();
         entities.forEach(e=>{
             if(!e.alive) return;
@@ -977,7 +1062,6 @@
                 ctx.fillStyle='#e8ddd0'; ctx.font='12px sans-serif'; ctx.textAlign='center';
                 const icon=e.isRemote?'🏹':(e.moveState==='fighting'?'⚔️':(e.moveState==='resting'?'💤':'👤'));
                 ctx.fillText(icon,x-6,y+5);
-                // 血条（受伤后短暂显示）
                 if(e.hp < e.maxHp && now - (e.lastHitTime||0) < 3000){
                     const hp=e.hp/e.maxHp;
                     ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-12,y-16,24,4);
@@ -985,20 +1069,14 @@
                 }
             } else if(e.type==='leader'){
                 const f=getFactionById(e.factionId); const color=f?f.color:'#ffd700';
-                // 大光晕
                 const grad=ctx.createRadialGradient(x,y,5,x,y,35);
                 grad.addColorStop(0,'rgba(255,215,0,0.5)'); grad.addColorStop(1,'rgba(255,215,0,0)');
                 ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(x,y,35,0,Math.PI*2); ctx.fill();
                 ctx.shadowColor='#ffd700'; ctx.shadowBlur=30; ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,18,0,Math.PI*2); ctx.fill();
                 ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.font='28px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x,y-24);
-                // 血条（持续显示）
                 const hp=e.hp/e.maxHp;
                 ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(x-22,y-32,44,6);
                 ctx.fillStyle=hp>0.5?'#2ecc71':'#e74c3c'; ctx.fillRect(x-22,y-32,44*hp,6);
-                // 攻击标记
-                if(e.attackCooldown>0){
-                    ctx.fillStyle='rgba(255,200,0,0.3)'; ctx.beginPath(); ctx.arc(x,y,25,0,Math.PI*2); ctx.fill();
-                }
             } else if(e.type==='village'){
                 const f=getFactionById(e.factionId); const color=f?f.color:'#a07050';
                 ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=24; ctx.beginPath(); ctx.arc(x,y,20,0,Math.PI*2); ctx.fill();
@@ -1017,13 +1095,11 @@
             }
         });
 
-        // 粒子
         particles.forEach(p=>{
             const a=p.life/p.maxLife;
             ctx.globalAlpha=a; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,4*a+1,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
         });
 
-        // 灭世
         if(isApocalypse){
             ctx.fillStyle='rgba(20,15,10,0.80)'; ctx.fillRect(0,0,W,H);
             ctx.fillStyle='#ff4757'; ctx.font='bold 120px "Segoe UI",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('OUT',W/2,H/2-20);
@@ -1035,11 +1111,10 @@
 
     function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-    // ---- 初始化 ----
     generateMountains();
     generateSprings();
     renderRank();
-    setStatus('⛲ 山脉 · 路径领土 · 战争 · 首领');
+    setStatus('⛲ 村庄为中心 · 路径扩张领域 · 走直线+停顿');
     loop();
 })();
 </script>
